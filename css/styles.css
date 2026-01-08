@@ -1,0 +1,67 @@
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  background: #f7faff;
+  color: #333;
+}
+
+header {
+  background: #1e88e5;
+  color: white;
+  padding: 1rem 2rem;
+}
+
+nav a {
+  margin-right: 1rem;
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.hero {
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.button {
+  display: inline-block;
+  padding: 0.8rem 1.4rem;
+  background: #1e88e5;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.card-grid {
+  display: grid;
+  gap: 1rem;
+  padding: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.card {
+  background: white;
+  padding: 1.2rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #333;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  transition: 0.2s;
+}
+
+.app-container {
+  padding: 2rem;
+}
+
+.app-box {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
