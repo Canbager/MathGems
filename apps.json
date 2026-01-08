@@ -1,0 +1,16 @@
+[
+  {
+    "title": "Quadratics — Error Analysis",
+    "description": "Investigate common mistakes and deepen conceptual understanding.",
+    "path": "apps/algebra/quadratic/index.html",
+    "preview": "apps/quadratics-error-analysis/preview.jpg",
+    "topic": "Algebra"
+  },
+  {
+    "title": "Algebra Tile Builder",
+    "description": "Manipulate tiles to model equations and expressions visually.",
+    "path": "apps/algebra-tiles/index.html",
+    "preview": "apps/algebra-tiles/preview.jpg",
+    "topic": "Algebra"
+  }
+]
