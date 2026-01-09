@@ -1,1 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linear-Quadratic Lock</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/roughjs@latest/bundled/rough.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Gochi+Hand&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .sketch-font { font-family: 'Gochi Hand', cursive; }
+        canvas { display: block; touch-action: none; background: #fff; }
+        .rough-area { filter: url(#rough-paper); }
+        
+        .sketch-input {
+            border: 2px solid #334155;
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.5rem;
+            font-family: 'Gochi Hand', cursive;
+            font-size: 1.25rem;
+            text-align: center;
+            outline: none;
+            transition: all 0.2s;
+            background-color: #fff;
+        }
+        .sketch-input:focus {
+            border-color: #4f46e5;
+            box-shadow: 2px 2px 0px 0px #4f46e5;
+        }
+        .sketch-btn {
+            background-color: #fff;
+            border: 2px solid #1e293b;
+            font-family: 'Gochi Hand', cursive;
+            font-weight: bold;
+            box-shadow: 2px 2px 0px 0px #1e293b;
+            transition: all 0.1s;
+            cursor: pointer;
+        }
+        .sketch-btn:active {
+            box-shadow: none;
+            transform: translate(2px, 2px);
+        }
+        .step-box {
+            transition: all 0.3s ease-in-out;
+        }
+        .animate-pop {
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Custom Checkbox */
+        .sketch-checkbox {
+            appearance: none;
+            background-color: #fff;
+            margin: 0;
+            font: inherit;
+            color: currentColor;
+            width: 1.5em;
+            height: 1.5em;
+            border: 2px solid #1e293b;
+            border-radius: 0.25em;
+            display: grid;
+            place-content: center;
+            cursor: pointer;
+        }
+        .sketch-checkbox::before {
+            content: "";
+            width: 0.85em;
+            height: 0.85em;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em #4f46e5;
+            background-color: #4f46e5;
+            transform-origin: center;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+        .sketch-checkbox:checked::before {
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-4 md:p-8">
+    <svg style="position: absolute; width: 0; height: 0;">
+        <filter id="rough-paper">
+            <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" />
+        </filter>
+    </svg>
 
+    <div class="max-w-6xl mx-auto space-y-6">
+        <!-- HEADER -->
+        <div class="bg-white border-4 border-slate-800 p-6 rounded-xl shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold sketch-font text-slate-800">Linear-Quadratic Lock</h1>
+                <p class="text-slate-600 text-sm font-semibold">Solve Simultaneous Equations Step-by-Step</p>
+            </div>
+            
+            <div class="flex flex-wrap gap-4 items-center bg-slate-100 p-3 rounded-lg border-2 border-slate-800">
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="opt-integers" class="sketch-checkbox" checked onchange="generateProblem()">
+                    <span class="font-bold text-slate-700 text-sm">Nice Numbers</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="opt-decimal" class="sketch-checkbox" onchange="generateProblem()">
+                    <span class="font-bold text-slate-700 text-sm">Tricky (Decimals)</span>
+                </label>
+                <button id="resetBtn" class="bg-white border-2 border-slate-800 px-4 py-1 rounded sketch-font font-bold hover:bg-yellow-50 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all">
+                    New Question
+                </button>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-12 gap-6">
+            <!-- LEFT COLUMN: Guided Steps -->
+            <div class="md:col-span-7 flex flex-col gap-6">
+                
+                <div class="bg-white border-4 border-slate-800 rounded-xl overflow-hidden shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] flex-1">
+                    <div class="p-6 md:p-8 rough-area relative">
+                        <!-- Decorative tape -->
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-32 h-8 bg-yellow-100/50 rotate-[-2deg] border border-yellow-200"></div>
+
+                        <div id="problem-text" class="text-slate-800 leading-relaxed text-2xl sketch-font flex justify-center py-6 bg-slate-50 rounded-lg border-2 border-dashed border-slate-300 mb-6">
+                            Loading...
+                        </div>
+
+                        <!-- STEPS -->
+                        <div class="space-y-6">
+                            
+                            <!-- STEP 1: EQUATE -->
+                            <div id="box-step1" class="step-box bg-white border-4 border-indigo-200 p-4 rounded-lg relative">
+                                <div class="absolute -top-3 left-4 bg-indigo-100 px-2 border border-indigo-300 rounded text-sm font-bold text-indigo-800 sketch-font">Step 1: Equate</div>
+                                <div class="mt-4 space-y-4">
+                                    <p class="sketch-font text-slate-600">Since both equal $y$, set them equal to each other:</p>
+                                    <div class="flex items-center justify-center gap-2 flex-wrap text-xl sketch-font">
+                                        <div id="step1-lhs"></div>
+                                        <span>=</span>
+                                        <div id="step1-rhs"></div>
+                                    </div>
+                                    <div class="text-center">
+                                        <button onclick="confirmStep1()" class="sketch-btn px-6 py-1 bg-indigo-50 hover:bg-indigo-100 rounded text-sm">Start Solving</button>
+                                        <div id="feedback-step1" class="text-lg mt-2"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- STEP 2: REARRANGE -->
+                            <div id="box-step2" class="step-box opacity-50 pointer-events-none bg-slate-50 border-2 border-dashed border-slate-300 p-4 rounded-lg relative">
+                                <div class="absolute -top-3 left-4 bg-slate-200 px-2 border border-slate-300 rounded text-sm font-bold text-slate-500 sketch-font">Step 2: Rearrange to Zero</div>
+                                <div class="mt-4 space-y-4 text-center">
+                                    <p class="sketch-font text-slate-600">Move everything to one side to form $Ax^2 + Bx + C = 0$.</p>
+                                    <div class="flex items-center justify-center gap-1 text-xl sketch-font flex-wrap">
+                                        <input type="text" id="input-a" class="sketch-input w-14" placeholder="A">
+                                        <span>$x^2 +$</span>
+                                        <input type="text" id="input-b" class="sketch-input w-14" placeholder="B">
+                                        <span>$x +$</span>
+                                        <input type="text" id="input-c" class="sketch-input w-14" placeholder="C">
+                                        <span>$= 0$</span>
+                                    </div>
+                                    <button onclick="checkRearrange()" class="sketch-btn px-3 py-1 bg-indigo-50 hover:bg-indigo-100 rounded text-sm">Check</button>
+                                    <span id="feedback-step2" class="text-lg"></span>
+                                </div>
+                            </div>
+
+                            <!-- STEP 3: SOLVE X -->
+                            <div id="box-step3" class="step-box opacity-50 pointer-events-none bg-slate-50 border-2 border-dashed border-slate-300 p-4 rounded-lg relative">
+                                <div class="absolute -top-3 left-4 bg-slate-200 px-2 border border-slate-300 rounded text-sm font-bold text-slate-500 sketch-font">Step 3: Find x values</div>
+                                <div class="mt-4 space-y-4 text-center">
+                                    <p class="sketch-font text-slate-600">Solve the quadratic for $x$ (Factorise or Formula).</p>
+                                    <div class="flex justify-center gap-4">
+                                        <div class="flex items-center gap-1">
+                                            $x_1 =$ <input type="number" id="input-x1" step="0.01" class="sketch-input w-24">
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            $x_2 =$ <input type="number" id="input-x2" step="0.01" class="sketch-input w-24">
+                                        </div>
+                                    </div>
+                                    <button onclick="checkX()" class="sketch-btn px-6 py-2 bg-indigo-50 hover:bg-indigo-100 rounded text-sm">Check x</button>
+                                    <div id="feedback-step3" class="text-lg"></div>
+                                </div>
+                            </div>
+
+                            <!-- STEP 4: SOLVE Y -->
+                            <div id="box-step4" class="step-box opacity-50 pointer-events-none bg-slate-50 border-2 border-dashed border-slate-300 p-4 rounded-lg relative">
+                                <div class="absolute -top-3 left-4 bg-slate-200 px-2 border border-slate-300 rounded text-sm font-bold text-slate-500 sketch-font">Step 4: Find Coordinates</div>
+                                <div class="mt-4 space-y-4 text-center">
+                                    
+                                    <!-- Substitution Choice -->
+                                    <div id="sub-choice-container">
+                                        <p class="sketch-font text-slate-600 mb-2">Which equation is easier to substitute into?</p>
+                                        <div class="flex justify-center gap-4">
+                                            <button onclick="chooseSubstitution('linear')" class="sketch-btn px-4 py-2 bg-red-50 hover:bg-red-100 border-red-300 text-red-800 text-sm">Linear (Recommended)</button>
+                                            <button onclick="chooseSubstitution('quadratic')" class="sketch-btn px-4 py-2 bg-blue-50 hover:bg-blue-100 border-blue-300 text-blue-800 text-sm">Quadratic</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Substitution Work -->
+                                    <div id="sub-work-container" class="hidden animate-pop">
+                                        <div id="sub-hint-text" class="text-sm bg-slate-100 p-3 rounded mb-4 text-slate-700 font-mono"></div>
+                                        
+                                        <p class="sketch-font text-slate-600 mb-2">Enter the corresponding y values:</p>
+                                        <div class="flex flex-col gap-2 items-center">
+                                            <div class="flex items-center gap-2">
+                                                <span>Point 1: (</span>
+                                                <span id="disp-x1" class="font-bold text-indigo-600">?</span>
+                                                <span>,</span>
+                                                <input type="number" id="input-y1" step="0.01" class="sketch-input w-20" placeholder="y1">
+                                                <span>)</span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span>Point 2: (</span>
+                                                <span id="disp-x2" class="font-bold text-indigo-600">?</span>
+                                                <span>,</span>
+                                                <input type="number" id="input-y2" step="0.01" class="sketch-input w-20" placeholder="y2">
+                                                <span>)</span>
+                                            </div>
+                                        </div>
+                                        <button onclick="checkY()" class="mt-4 sketch-btn px-6 py-2 bg-indigo-50 hover:bg-indigo-100 rounded text-sm">Check Final Answer</button>
+                                        <div id="feedback-step4" class="text-lg"></div>
+                                    </div>
+                                    
+                                    <!-- Success Banner -->
+                                    <div id="success-banner" class="hidden mt-6 bg-yellow-100 border-4 border-yellow-400 p-4 rounded-lg shadow-[4px_4px_0px_0px_rgba(234,179,8,1)] animate-pop">
+                                        <h3 class="text-2xl font-bold sketch-font text-yellow-800">🎉 System Solved! 🎉</h3>
+                                        <p class="text-yellow-900 mt-1">Check the Visual Connection box!</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SDG BOX -->
+                <div class="bg-emerald-50 border-4 border-slate-800 rounded-xl p-4 flex items-center gap-4 shadow-[4px_4px_0px_0px_rgba(30,41,59,1)]">
+                    <div class="shrink-0 w-14 h-14 bg-emerald-600 rounded flex items-center justify-center text-white font-bold text-2xl shadow-sm">4</div>
+                    <div>
+                        <h3 class="font-bold text-emerald-900 text-sm uppercase">Quality Education</h3>
+                        <p class="text-xs text-emerald-800 leading-tight">Mastering simultaneous equations bridges algebra and geometry.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: Visualisation -->
+            <div class="md:col-span-5 space-y-6">
+                <!-- MAIN GRAPH -->
+                <div class="bg-white border-4 border-slate-800 rounded-xl overflow-hidden relative shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] aspect-square">
+                    <div class="absolute top-2 left-2 z-10">
+                        <span class="bg-white/90 px-2 py-1 border border-slate-800 rounded text-xs font-bold sketch-font">Main System</span>
+                    </div>
+                    
+                    <div id="canvas-wrapper" class="w-full h-full bg-white cursor-crosshair relative">
+                        <canvas id="geoCanvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- RESULTANT GRAPH (Hidden initially) -->
+                <div id="resultant-wrapper-box" class="hidden bg-purple-50 border-4 border-purple-300 rounded-xl overflow-hidden relative shadow-[8px_8px_0px_0px_rgba(168,85,247,0.4)] animate-pop aspect-square">
+                    <div class="absolute top-2 left-2 z-10">
+                        <span class="bg-white/90 px-2 py-1 border border-purple-300 rounded text-xs font-bold sketch-font text-purple-800">Resultant Graph</span>
+                    </div>
+                    <div class="w-full h-full bg-white cursor-crosshair relative">
+                        <canvas id="resCanvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- FINAL VISUAL CONNECTION (Hidden initially) -->
+                <div id="final-connection-box" class="hidden bg-yellow-50 border-4 border-yellow-300 rounded-xl overflow-hidden relative shadow-[8px_8px_0px_0px_rgba(234,179,8,0.4)] animate-pop aspect-square">
+                    <div class="absolute top-2 left-2 z-10">
+                        <span class="bg-white/90 px-2 py-1 border border-yellow-300 rounded text-xs font-bold sketch-font text-yellow-800">Visual Connection</span>
+                    </div>
+                    <div class="w-full h-full bg-white relative">
+                        <canvas id="connectCanvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Tip Box -->
+                <div id="tip-box" class="bg-amber-50 border-4 border-slate-800 rounded-xl p-6 shadow-[4px_4px_0px_0px_rgba(30,41,59,1)] relative overflow-hidden transition-all">
+                    <div class="absolute -right-4 -top-4 w-16 h-16 bg-amber-200 rounded-full opacity-50"></div>
+                    <h4 class="font-bold text-amber-900 sketch-font text-lg mb-2">Teacher's Tip:</h4>
+                    <p id="tip-text" class="text-sm text-amber-800 italic">
+                        "At the intersection points, the y-value from the line is the same as the y-value from the curve. That's why we can write Line = Curve!"
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONSTANTS & CONFIG ---
+        const KATEX_CONFIG = {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            throwOnError: false
+        };
+
+        const canvas = document.getElementById('geoCanvas');
+        const ctx = canvas.getContext('2d');
+        const roughCanvas = rough.canvas(canvas);
+
+        const resCanvas = document.getElementById('resCanvas');
+        const resCtx = resCanvas.getContext('2d');
+        const roughResCanvas = rough.canvas(resCanvas);
+
+        const conCanvas = document.getElementById('connectCanvas');
+        const conCtx = conCanvas.getContext('2d');
+        const roughConCanvas = rough.canvas(conCanvas);
+        
+        let currentProblem = null;
+        let scale = 20; 
+        let origin = { x: 0, y: 0 };
+        let showPoints = false;
+        let step2Done = false; // Flag for resultant graph visual
+        
+        // Animation State
+        let animTime = 0;
+        let isAnimating = false;
+        
+        // --- UTILITIES ---
+        const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        // Better Decimal Formatting
+        function formatNum(n) {
+            return parseFloat(n.toFixed(2)).toString();
+        }
+
+        function formatPoly(a, b, c) {
+            a = parseFloat(formatNum(a));
+            b = parseFloat(formatNum(b));
+            c = parseFloat(formatNum(c));
+
+            let s = "";
+            if (a !== 0) {
+                if (a === -1) s += "-x^2";
+                else if (a === 1) s += "x^2";
+                else s += a + "x^2";
+            }
+            
+            if (b !== 0) {
+                if (s !== "" && b > 0) s += " + ";
+                else if (s !== "" && b < 0) s += " - ";
+                else if (b < 0) s += "-";
+                
+                const absB = Math.abs(b);
+                if (absB !== 1) s += absB + "x"; 
+                else s += "x";
+            }
+            
+            if (c !== 0) {
+                if (s !== "" && c > 0) s += " + " + c;
+                else if (s !== "" && c < 0) s += " - " + Math.abs(c);
+                else s += c; 
+            } else if (s === "") {
+                s = "0";
+            }
+            return s.replace(/\+/g, " + ").replace(/-/g, " - ").replace(/^ - /, "-"); 
+        }
+
+        // --- PROBLEM GENERATION ---
+        function generateProblem() {
+            const optInt = document.getElementById('opt-integers').checked;
+            
+            let r1, r2;
+            if (optInt) {
+                r1 = rnd(-5, 5);
+                r2 = rnd(-5, 5);
+                if(r1 === r2) r2 += 1; 
+            } else {
+                r1 = rnd(-50, 50)/10;
+                r2 = rnd(-50, 50)/10;
+                if(r1 === r2) r2 += 0.5;
+            }
+
+            const a = (Math.random() > 0.5 ? 1 : -1) * (optInt ? 1 : rnd(1,2));
+            const resB = -a * (r1 + r2);
+            const resC = a * r1 * r2;
+
+            const q_b = rnd(-5, 5);
+            const q_c = rnd(-8, 8); 
+
+            const l_m = q_b - resB;
+            const l_k = q_c - resC;
+
+            currentProblem = {
+                q: { a: a, b: q_b, c: q_c },
+                l: { m: l_m, k: l_k },
+                res: { a: a, b: resB, c: resC }, 
+                roots: [r1, r2],
+                yVals: [l_m*r1 + l_k, l_m*r2 + l_k]
+            };
+
+            const qStr = `y = ${formatPoly(a, q_b, q_c)}`;
+            const lStr = `y = ${formatPoly(0, l_m, l_k)}`; 
+            
+            katex.render(`\\begin{cases} ${qStr} \\\\ ${lStr} \\end{cases}`, document.getElementById('problem-text'), KATEX_CONFIG);
+            
+            document.getElementById('step1-lhs').innerHTML = `$${formatPoly(a, q_b, q_c)}$`;
+            document.getElementById('step1-rhs').innerHTML = `$${formatPoly(0, l_m, l_k)}$`;
+            
+            renderMathInElement(document.getElementById('step1-lhs'), KATEX_CONFIG);
+            renderMathInElement(document.getElementById('step1-rhs'), KATEX_CONFIG);
+
+            resetUI();
+            showPoints = false;
+            step2Done = false;
+            resizeCanvases();
+        }
+
+        // --- UI LOGIC ---
+        function resetUI() {
+            document.querySelectorAll('input').forEach(i => {
+                if(i.type === 'text' || i.type === 'number') i.value = '';
+            });
+            document.querySelectorAll('[id^=feedback]').forEach(d => d.innerHTML = '');
+            
+            resetBox('box-step1', true);
+            resetBox('box-step2', false);
+            resetBox('box-step3', false);
+            resetBox('box-step4', false);
+            document.getElementById('success-banner').classList.add('hidden');
+            document.getElementById('resultant-wrapper-box').classList.add('hidden');
+            document.getElementById('final-connection-box').classList.add('hidden');
+            
+            // Reset Step 4 visuals
+            document.getElementById('sub-choice-container').classList.remove('hidden');
+            document.getElementById('sub-work-container').classList.add('hidden');
+            document.getElementById('sub-hint-text').innerHTML = '';
+
+            document.getElementById('disp-x1').textContent = "?";
+            document.getElementById('disp-x2').textContent = "?";
+            
+            isAnimating = false;
+        }
+
+        function resetBox(id, active) {
+            const el = document.getElementById(id);
+            if (active) {
+                el.classList.remove('opacity-50', 'pointer-events-none', 'bg-slate-50', 'border-dashed', 'border-slate-300');
+                el.classList.add('bg-white', 'border-4', 'border-indigo-200');
+            } else {
+                el.classList.add('opacity-50', 'pointer-events-none', 'bg-slate-50', 'border-dashed', 'border-slate-300');
+                el.classList.remove('bg-white', 'border-4', 'border-indigo-200');
+            }
+        }
+
+        function feedback(id, isCorrect, msg="") {
+            const el = document.getElementById(id);
+            if (!el) return; 
+            if(isCorrect) el.innerHTML = `<span class="text-emerald-600 font-bold">✓</span>`;
+            else el.innerHTML = `<span class="text-red-500 font-bold">✗ ${msg}</span>`;
+            
+            if(msg.includes('$')) renderMathInElement(el, KATEX_CONFIG);
+        }
+
+        // --- STEPS ---
+        function confirmStep1() {
+            feedback('feedback-step1', true); 
+            resetBox('box-step2', true);
+            document.getElementById('tip-text').innerText = "Combine terms: Subtract the linear terms from the quadratic side.";
+        }
+
+        function checkRearrange() {
+            const uA = parseFloat(document.getElementById('input-a').value);
+            const uB = parseFloat(document.getElementById('input-b').value);
+            const uC = parseFloat(document.getElementById('input-c').value);
+            
+            const r = currentProblem.res;
+            
+            const match1 = (Math.abs(uA - r.a) < 0.01 && Math.abs(uB - r.b) < 0.01 && Math.abs(uC - r.c) < 0.01);
+            const match2 = (Math.abs(uA + r.a) < 0.01 && Math.abs(uB + r.b) < 0.01 && Math.abs(uC + r.c) < 0.01);
+            
+            if (match1 || match2) {
+                feedback('feedback-step2', true);
+                resetBox('box-step3', true);
+                document.getElementById('tip-text').innerText = "Now solve this new quadratic equation to find the x-values.";
+                
+                step2Done = true; // Reveal roots visual on resultant graph
+                document.getElementById('resultant-wrapper-box').classList.remove('hidden');
+                drawResultantGraph(); 
+            } else {
+                feedback('feedback-step2', false, `Check terms. Should be $${formatPoly(r.a, r.b, r.c)}$`);
+            }
+        }
+
+        function checkX() {
+            const u1 = parseFloat(document.getElementById('input-x1').value);
+            const u2 = parseFloat(document.getElementById('input-x2').value);
+            
+            if (isNaN(u1) || isNaN(u2)) { feedback('feedback-step3', false, "Enter both"); return; }
+            
+            const r1 = currentProblem.roots[0];
+            const r2 = currentProblem.roots[1];
+            
+            const match1 = (Math.abs(u1 - r1) < 0.05 && Math.abs(u2 - r2) < 0.05);
+            const match2 = (Math.abs(u1 - r2) < 0.05 && Math.abs(u2 - r1) < 0.05);
+            
+            if (match1 || match2) {
+                feedback('feedback-step3', true);
+                resetBox('box-step4', true);
+                
+                document.getElementById('disp-x1').textContent = formatNum(u1);
+                document.getElementById('disp-x2').textContent = formatNum(u2);
+                document.getElementById('tip-text').innerText = "Choose the simpler equation to find the y-values.";
+            } else {
+                feedback('feedback-step3', false, "Check roots");
+            }
+        }
+
+        // STEP 4 - SUBSTITUTION LOGIC
+        function chooseSubstitution(type) {
+            document.getElementById('sub-choice-container').classList.add('hidden');
+            document.getElementById('sub-work-container').classList.remove('hidden');
+            
+            const p = currentProblem;
+            const x1 = parseFloat(document.getElementById('input-x1').value); // get inputs from prev step
+            
+            let hint = "";
+            if (type === 'linear') {
+                hint = `Substitute into Linear ($y = ${formatPoly(0, p.l.m, p.l.k)}$):<br>
+                        $$ y = ${p.l.m}(${formatNum(x1)}) ${p.l.k >= 0 ? '+' : ''} ${p.l.k} $$`;
+            } else {
+                hint = `Substitute into Quadratic ($y = ${formatPoly(p.q.a, p.q.b, p.q.c)}$):<br>
+                        $$ y = ${p.q.a}(${formatNum(x1)})^2 ${p.q.b >= 0 ? '+' : ''} ${p.q.b}(${formatNum(x1)}) ${p.q.c >= 0 ? '+' : ''} ${p.q.c} $$`;
+            }
+            
+            const hintBox = document.getElementById('sub-hint-text');
+            hintBox.innerHTML = hint;
+            renderMathInElement(hintBox, KATEX_CONFIG);
+        }
+
+        function checkY() {
+            const y1 = parseFloat(document.getElementById('input-y1').value);
+            const y2 = parseFloat(document.getElementById('input-y2').value);
+            
+            const x1_in = parseFloat(document.getElementById('input-x1').value);
+            const x2_in = parseFloat(document.getElementById('input-x2').value);
+            
+            const l = currentProblem.l;
+            const trueY1 = l.m * x1_in + l.k;
+            const trueY2 = l.m * x2_in + l.k;
+            
+            if (Math.abs(y1 - trueY1) < 0.05 && Math.abs(y2 - trueY2) < 0.05) {
+                feedback('feedback-step4', true);
+                document.getElementById('success-banner').classList.remove('hidden');
+                document.getElementById('final-connection-box').classList.remove('hidden');
+                showPoints = true;
+                drawGraph();
+                
+                // Start Animation loop if not already running
+                if(!isAnimating) {
+                    isAnimating = true;
+                    animTime = 0;
+                    drawConnectionVisual();
+                }
+            } else {
+                feedback('feedback-step4', false, "Check y values");
+            }
+        }
+
+        // --- GRAPHING ---
+        function resizeCanvases() {
+            const wrapper = document.getElementById('canvas-wrapper');
+            canvas.width = wrapper.clientWidth;
+            canvas.height = wrapper.clientHeight;
+            
+            const resWrapper = document.getElementById('resultant-wrapper-box');
+            // If hidden, clientWidth is 0. Use defaults.
+            resCanvas.width = resWrapper.clientWidth || 300; 
+            resCanvas.height = resWrapper.clientHeight || 300;
+
+            const conWrapper = document.getElementById('final-connection-box');
+            conCanvas.width = conWrapper.clientWidth || 300;
+            conCanvas.height = conWrapper.clientHeight || 300;
+
+            drawGraph();
+            if(!document.getElementById('resultant-wrapper-box').classList.contains('hidden')) {
+                drawResultantGraph();
+            }
+            if(!document.getElementById('final-connection-box').classList.contains('hidden')) {
+                drawConnectionVisual();
+            }
+        }
+
+        // Shared helper to setup graph coords
+        function getGraphConfig(w, h, p) {
+            const r1 = p.roots[0];
+            const r2 = p.roots[1];
+            const y1 = p.yVals[0];
+            const y2 = p.yVals[1];
+            
+            const maxAbsX = Math.max(Math.abs(r1), Math.abs(r2), 5);
+            const maxAbsY = Math.max(Math.abs(y1), Math.abs(y2), 15);
+            
+            const scale = Math.min(w/(2.5*maxAbsX), h/(3*maxAbsY));
+            const originX = w / 2;
+            const originY = h / 2;
+            
+            return { scale, originX, originY, maxAbsX, maxAbsY };
+        }
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if(!currentProblem) return;
+
+            const w = canvas.width;
+            const h = canvas.height;
+            const cfg = getGraphConfig(w, h, currentProblem);
+            const { scale, originX, originY } = cfg;
+            
+            const toScreen = (x, y) => ({
+                x: originX + x * scale,
+                y: originY - y * scale
+            });
+
+            // Grid
+            ctx.beginPath(); ctx.strokeStyle = "#f1f5f9"; ctx.lineWidth = 1;
+            const rangeX = w/(2*scale);
+            for(let i = -Math.ceil(rangeX); i <= Math.ceil(rangeX); i++) {
+                let p1 = toScreen(i, 0); ctx.moveTo(p1.x, 0); ctx.lineTo(p1.x, h);
+            }
+            const rangeY = h/(2*scale);
+            for(let i = -Math.ceil(rangeY); i <= Math.ceil(rangeY); i++) {
+                let p1 = toScreen(0, i); ctx.moveTo(0, p1.y); ctx.lineTo(w, p1.y);
+            }
+            ctx.stroke();
+
+            // Axes
+            roughCanvas.line(0, originY, w, originY, { stroke: '#94a3b8', strokeWidth: 2 });
+            roughCanvas.line(originX, 0, originX, h, { stroke: '#94a3b8', strokeWidth: 2 });
+
+            const plotPoints = (func, color, dash=false) => {
+                const step = 0.1;
+                const points = [];
+                for(let x = -rangeX; x <= rangeX; x += step) {
+                    const y = func(x);
+                    const p = toScreen(x, y);
+                    if(p.y > -100 && p.y < h + 100) points.push([p.x, p.y]);
+                }
+                const ops = { stroke: color, strokeWidth: 2 };
+                if(dash) ops.strokeLineDash = [5, 5];
+                roughCanvas.curve(points, ops);
+            };
+
+            const p = currentProblem;
+            plotPoints((x) => p.q.a*x*x + p.q.b*x + p.q.c, '#3b82f6'); // Blue
+            plotPoints((x) => p.l.m*x + p.l.k, '#ef4444'); // Red
+
+            // No resultant on main graph now
+
+            if (showPoints) {
+                p.roots.forEach((rx, i) => {
+                    const ry = p.yVals[i];
+                    const sc = toScreen(rx, ry);
+                    roughCanvas.circle(sc.x, sc.y, 8, { fill: '#22c55e', fillStyle: 'solid', stroke: 'none' });
+                    
+                    ctx.fillStyle = "#15803d";
+                    ctx.font = "bold 12px sans-serif";
+                    ctx.fillText(`(${formatNum(rx)}, ${formatNum(ry)})`, sc.x + 10, sc.y - 10);
+                });
+            }
+        }
+
+        function drawResultantGraph() {
+            if(!currentProblem) return;
+            const w = resCanvas.width;
+            const h = resCanvas.height;
+            resCtx.clearRect(0, 0, w, h);
+            
+            const cfg = getGraphConfig(w, h, currentProblem);
+            const { scale, originX, originY } = cfg; // Match scale of main graph
+            
+            const toScreen = (x, y) => ({
+                x: originX + x * scale,
+                y: originY - y * scale
+            });
+
+            // Grid
+            resCtx.beginPath(); resCtx.strokeStyle = "#f3e8ff"; resCtx.lineWidth = 1;
+            const rangeX = w/(2*scale);
+            for(let i = -Math.ceil(rangeX); i <= Math.ceil(rangeX); i++) {
+                let p1 = toScreen(i, 0); resCtx.moveTo(p1.x, 0); resCtx.lineTo(p1.x, h);
+            }
+            resCtx.stroke();
+
+            // Axes
+            roughResCanvas.line(0, originY, w, originY, { stroke: '#a855f7', strokeWidth: 1 });
+            roughResCanvas.line(originX, 0, originX, h, { stroke: '#a855f7', strokeWidth: 1 });
+
+            // Plot Resultant
+            const p = currentProblem;
+            const step = 0.1;
+            const points = [];
+            for(let x = -rangeX; x <= rangeX; x += step) {
+                const y = p.res.a*x*x + p.res.b*x + p.res.c;
+                const pt = toScreen(x, y);
+                if(pt.y > -50 && pt.y < h + 50) points.push([pt.x, pt.y]);
+            }
+            roughResCanvas.curve(points, { stroke: '#a855f7', strokeWidth: 2, strokeLineDash: [5, 5] });
+            
+            // Mark Roots - SHOW IF STEP 2 DONE
+            if(step2Done) {
+                p.roots.forEach(r => {
+                    const sc = toScreen(r, 0);
+                    roughResCanvas.circle(sc.x, sc.y, 6, { fill: '#a855f7', fillStyle: 'solid', stroke: 'none' });
+                    // Label x value
+                    resCtx.fillStyle = "#a855f7";
+                    resCtx.font = "bold 12px sans-serif";
+                    resCtx.fillText(formatNum(r), sc.x + 8, sc.y - 8);
+                });
+            }
+        }
+
+        function drawConnectionVisual() {
+            if(!currentProblem || !isAnimating) return;
+            const w = conCanvas.width;
+            const h = conCanvas.height;
+            conCtx.clearRect(0, 0, w, h);
+            
+            const p = currentProblem;
+            
+            // Use same configuration as main graph so they look identical
+            const cfg = getGraphConfig(w, h, p);
+            const { scale, originX, originY } = cfg;
+            
+            const toScreen = (x, y) => ({
+                x: originX + x * scale,
+                y: originY - y * scale
+            });
+
+            // Draw Axes
+            roughConCanvas.line(0, originY, w, originY, { stroke: '#94a3b8', strokeWidth: 1 });
+            roughConCanvas.line(originX, 0, originX, h, { stroke: '#94a3b8', strokeWidth: 1 });
+
+            // Helper Plot
+            const plot = (func, color, dashed=false) => {
+                const step = 0.1;
+                const pts = [];
+                const rangeX = w/(2*scale);
+                for(let x=-rangeX; x<=rangeX; x+=step) {
+                    const y = func(x);
+                    const pt = toScreen(x, y);
+                    if(pt.y > -50 && pt.y < h+50) pts.push([pt.x, pt.y]);
+                }
+                const ops = {stroke: color, strokeWidth: 2};
+                if(dashed) ops.strokeLineDash = [5,5];
+                roughConCanvas.curve(pts, ops);
+            }
+            
+            // Draw All 3
+            plot(x => p.q.a*x*x + p.q.b*x + p.q.c, '#3b82f6'); // Q
+            plot(x => p.l.m*x + p.l.k, '#ef4444'); // L
+            plot(x => p.res.a*x*x + p.res.b*x + p.res.c, '#a855f7', true); // Res
+
+            // Animation Logic
+            // t goes 0 -> 1 -> 0 based on sin wave
+            animTime += 0.05;
+            const t = (Math.sin(animTime) + 1) / 2; // 0 to 1
+            
+            // Draw Animated Dots
+            p.roots.forEach((rx, i) => {
+                const ry_intersect = p.yVals[i]; // Intersection Y
+                const ry_root = 0; // Axis Y
+                
+                // Interpolate Y
+                const currentY = ry_intersection => ry_intersection * (1-t) + ry_root * t;
+                const movingY = currentY(ry_intersect);
+                
+                const pt = toScreen(rx, movingY);
+                
+                // Draw connecting vertical dashed line
+                const topPt = toScreen(rx, ry_intersect);
+                const botPt = toScreen(rx, 0);
+                roughConCanvas.line(topPt.x, topPt.y, botPt.x, botPt.y, { stroke: '#cbd5e1', strokeWidth: 1, strokeLineDash: [4, 4] });
+
+                // Draw moving dot
+                roughConCanvas.circle(pt.x, pt.y, 8, { fill: '#eab308', fillStyle: 'solid', stroke: 'none' });
+            });
+            
+            if(isAnimating) requestAnimationFrame(drawConnectionVisual);
+        }
+
+        // --- INIT ---
+        window.addEventListener('resize', resizeCanvases);
+        document.getElementById('resetBtn').addEventListener('click', generateProblem);
+        
+        generateProblem(); // Start
+
+        // Global Render for Static Content
+        renderMathInElement(document.body, KATEX_CONFIG);
+
+    </script>
+</body>
+</html>
