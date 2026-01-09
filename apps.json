@@ -7,9 +7,9 @@
     "topic": "Algebra"
   },
   {
-    "title": "Algebra Tile Builder",
+    "title": "Simultaneous Equations - Elimination",
     "description": "Manipulate tiles to model equations and expressions visually.",
-    "path": "apps/algebra-tiles/index.html",
+    "path": "apps/algebra/simultaneous_elimination/index.html",
     "preview": "apps/algebra-tiles/preview.jpg",
     "topic": "Algebra"
   }
