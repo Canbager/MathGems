@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Square Complete: Visual Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/roughjs@latest/bundled/rough.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Gochi+Hand&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .sketch-font { font-family: 'Gochi Hand', cursive; }
+        canvas { display: block; touch-action: none; background: #fff; }
+        .rough-area { filter: url(#rough-paper); }
+        
+        .sketch-input {
+            border: 2px solid #334155;
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.5rem;
+            font-family: 'Gochi Hand', cursive;
+            font-size: 1.25rem;
+            text-align: center;
+            outline: none;
+            transition: all 0.2s;
+            background-color: #fff;
+        }
+        .sketch-input:focus {
+            border-color: #4f46e5;
+            box-shadow: 2px 2px 0px 0px #4f46e5;
+        }
+        .sketch-btn {
+            background-color: #fff;
+            border: 2px solid #1e293b;
+            font-family: 'Gochi Hand', cursive;
+            font-weight: bold;
+            box-shadow: 2px 2px 0px 0px #1e293b;
+            transition: all 0.1s;
+            cursor: pointer;
+        }
+        .sketch-btn:active {
+            box-shadow: none;
+            transform: translate(2px, 2px);
+        }
+        .step-box {
+            transition: all 0.3s ease-in-out;
+        }
+        .animate-pop {
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Custom Checkbox */
+        .sketch-checkbox {
+            appearance: none;
+            background-color: #fff;
+            margin: 0;
+            font: inherit;
+            color: currentColor;
+            width: 1.5em;
+            height: 1.5em;
+            border: 2px solid #1e293b;
+            border-radius: 0.25em;
+            display: grid;
+            place-content: center;
+            cursor: pointer;
+        }
+        .sketch-checkbox::before {
+            content: "";
+            width: 0.85em;
+            height: 0.85em;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em #4f46e5;
+            background-color: #4f46e5;
+            transform-origin: center;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+        .sketch-checkbox:checked::before {
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-4 md:p-8">
+    <svg style="position: absolute; width: 0; height: 0;">
+        <filter id="rough-paper">
+            <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" />
+        </filter>
+    </svg>
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        <!-- HEADER -->
+        <div class="bg-white border-4 border-slate-800 p-6 rounded-xl shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold sketch-font text-slate-800">Complete the Square</h1>
+                <p class="text-slate-600 text-sm font-semibold">Geometric & Algebraic Method</p>
+            </div>
+            
+            <div class="flex flex-wrap gap-4 items-center bg-slate-100 p-3 rounded-lg border-2 border-slate-800">
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="opt-monic" class="sketch-checkbox" checked onchange="generateProblem()">
+                    <span class="font-bold text-slate-700 text-sm">Monic ($a=1$)</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="opt-nonmonic" class="sketch-checkbox" onchange="generateProblem()">
+                    <span class="font-bold text-slate-700 text-sm">Non-Monic ($a \neq 1$)</span>
+                </label>
+                <button id="resetBtn" class="bg-white border-2 border-slate-800 px-4 py-1 rounded sketch-font font-bold hover:bg-yellow-50 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all">
+                    New Question
+                </button>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-12 gap-6">
+            <!-- LEFT COLUMN: Guided Steps -->
+            <div class="md:col-span-7 flex flex-col gap-6">
+                
+                <div class="bg-white border-4 border-slate-800 rounded-xl overflow-hidden shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] flex-1">
+                    <div class="p-6 md:p-8 rough-area relative">
+                        <!-- Decorative tape -->
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-32 h-8 bg-yellow-100/50 rotate-[-2deg] border border-yellow-200"></div>
+
+                        <div id="problem-text" class="text-slate-800 leading-relaxed text-2xl sketch-font flex justify-center py-6 bg-slate-50 rounded-lg border-2 border-dashed border-slate-300 mb-6">
+                            Loading...
+                        </div>
+
+                        <!-- STEPS -->
+                        <div class="space-y-6">
+                            
+                            <!-- STEP 1: PREPARATION -->
+                            <div id="box-step1" class="step-box bg-white border-4 border-indigo-200 p-4 rounded-lg relative">
+                                <div class="absolute -top-3 left-4 bg-indigo-100 px-2 border border-indigo-300 rounded text-sm font-bold text-indigo-800 sketch-font">Step 1: Prepare Equation</div>
+                                
+                                <div class="mt-4 space-y-6">
+                                    
+                                    <!-- 1.1 DIVIDE (Non-Monic Only) -->
+                                    <div id="step1-divide-section" class="hidden space-y-3 animate-pop">
+                                        <p class="sketch-font text-slate-600">The coefficient of $x^2$ is not 1. We must divide the whole equation by what?</p>
+                                        <div class="flex items-center justify-center gap-2">
+                                            <span class="font-bold">Divide by:</span>
+                                            <input type="text" id="input-divide" class="sketch-input w-20" placeholder="?">
+                                            <button onclick="checkDivide()" class="sketch-btn px-3 py-1 bg-indigo-50 hover:bg-indigo-100 rounded text-sm">Check</button>
+                                            <span id="feedback-divide"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 1.2 SIMPLIFY (Non-Monic Only) -->
+                                    <div id="step1-simplify-section" class="hidden opacity-50 pointer-events-none transition-all space-y-3">
+                                        <p class="sketch-font text-slate-600">Write the new simplified equation:</p>
+                                        <div class="flex items-center justify-center gap-1 text-xl sketch-font flex-wrap">
+                                            <span>$x^2 +$</span>
+                                            <input type="text" id="input-simp-b" class="sketch-input w-16" placeholder="b/a">
+                                            <span>$x +$</span>
+                                            <input type="text" id="input-simp-c" class="sketch-input w-16" placeholder="c/a">
+                                            <span>$= 0$</span>
+                                            <button onclick="checkSimplify()" class="sketch-btn px-3 py-1 bg-indigo-50 hover:bg-indigo-100 rounded text-sm">Check</button>
+                                            <span id="feedback-simplify"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 1.3 ISOLATE (Common) -->
+                                    <div id="step1-isolate-section" class="hidden opacity-50 pointer-events-none transition-all space-y-3">
+                                        <p class="sketch-font text-slate-600">Isolate the $x$ terms (move constant to RHS):</p>
+                                        <div class="flex items-center justify-center gap-2 flex-wrap">
+                                            <div class="text-xl font-bold sketch-font">
+                                                $x^2$ <span id="disp-sign-b">+</span> <span id="disp-val-b">?</span> $x =$ 
+                                            </div>
+                                            <input type="text" id="input-step1-rhs" class="sketch-input w-24" placeholder="?">
+                                            <button onclick="checkStep1()" class="sketch-btn px-3 py-1 bg-indigo-50 hover:bg-indigo-100 rounded text-sm">Check</button>
+                                            <span id="feedback-step1" class="text-lg"></span>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <!-- STEP 2: THE SQUARE -->
+                            <div id="box-step2" class="step-box opacity-50 pointer-events-none bg-slate-50 border-2 border-dashed border-slate-300 p-4 rounded-lg relative">
+                                <div class="absolute -top-3 left-4 bg-slate-200 px-2 border border-slate-300 rounded text-sm font-bold text-slate-500 sketch-font">Step 2: Complete the Square</div>
+                                <div class="mt-4 space-y-4">
+                                    <div class="flex flex-col md:flex-row gap-4 items-center">
+                                        <div class="flex-1 text-center md:text-left">
+                                            <p class="sketch-font text-slate-600 mb-2">We need to add a "magic number" to complete the shape.</p>
+                                            <p class="text-sm text-slate-500 mb-2">Formula: $(\frac{\text{coeff of } x}{2})^2$</p>
+                                            
+                                            <div class="flex items-center justify-center md:justify-start gap-2">
+                                                <span class="sketch-font text-lg">Add:</span>
+                                                <input type="text" id="input-magic" class="sketch-input w-20" placeholder="?">
+                                                <button onclick="checkStep2()" class="sketch-btn px-3 py-1 bg-indigo-50 hover:bg-indigo-100 rounded text-sm">Check</button>
+                                                <span id="feedback-step2" class="text-lg"></span>
+                                            </div>
+                                            <div class="mt-4">
+                                                <button onclick="triggerAnimation()" class="sketch-btn px-4 py-2 bg-yellow-100 hover:bg-yellow-200 rounded text-yellow-800 text-sm border-yellow-400">
+                                                    ▶ Visualize Split
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <!-- Visual Canvas for Step 2 -->
+                                        <div class="w-48 h-48 bg-white border-2 border-slate-800 rounded relative overflow-hidden">
+                                            <canvas id="squareCanvas"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- STEP 3: FACTORISE -->
+                            <div id="box-step3" class="step-box opacity-50 pointer-events-none bg-slate-50 border-2 border-dashed border-slate-300 p-4 rounded-lg relative">
+                                <div class="absolute -top-3 left-4 bg-slate-200 px-2 border border-slate-300 rounded text-sm font-bold text-slate-500 sketch-font">Step 3: Factorise & Simplify</div>
+                                <div class="mt-4 space-y-3 text-center">
+                                    <p class="sketch-font text-slate-600">Write as a perfect square: $(x + p)^2 = \text{New Total}$</p>
+                                    <div class="flex items-center justify-center gap-2 text-xl sketch-font flex-wrap">
+                                        <span>( $x$ + </span>
+                                        <input type="text" id="input-step3-p" class="sketch-input w-20" placeholder="p">
+                                        <span>)$^2 =$</span>
+                                        <input type="text" id="input-step3-q" class="sketch-input w-24" placeholder="Total">
+                                        <button onclick="checkStep3()" class="sketch-btn px-3 py-1 bg-indigo-50 hover:bg-indigo-100 rounded text-sm">Check</button>
+                                        <span id="feedback-step3" class="text-lg"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- STEP 4: SOLVE -->
+                            <div id="box-step4" class="step-box opacity-50 pointer-events-none bg-slate-50 border-2 border-dashed border-slate-300 p-4 rounded-lg relative">
+                                <div class="absolute -top-3 left-4 bg-slate-200 px-2 border border-slate-300 rounded text-sm font-bold text-slate-500 sketch-font">Step 4: Solve</div>
+                                <div class="mt-4 space-y-6 text-center">
+                                    
+                                    <!-- 4a Rearrange -->
+                                    <div id="step4-rearrange" class="space-y-2">
+                                        <p class="sketch-font text-slate-600">Square root both sides and rearrange for $x$:</p>
+                                        <div class="flex items-center justify-center gap-2 text-xl sketch-font">
+                                            $x =$ 
+                                            <input type="text" id="input-rearrange-p" class="sketch-input w-20" placeholder="-p">
+                                            $\pm \sqrt{}$
+                                            <input type="text" id="input-rearrange-k" class="sketch-input w-20" placeholder="k">
+                                            <button onclick="checkRearrange()" class="sketch-btn px-3 py-1 bg-indigo-50 hover:bg-indigo-100 rounded text-sm">Check</button>
+                                            <span id="feedback-rearrange"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 4b Final Answer -->
+                                    <div id="step4-final" class="hidden opacity-50 pointer-events-none transition-all space-y-2">
+                                        <p class="sketch-font text-slate-600">Calculate final values (2 decimal places):</p>
+                                        <div class="flex justify-center gap-4">
+                                            <div class="flex items-center gap-1">
+                                                $x_1 =$ <input type="number" id="input-root-1" step="0.01" class="sketch-input w-24">
+                                            </div>
+                                            <div class="flex items-center gap-1">
+                                                $x_2 =$ <input type="number" id="input-root-2" step="0.01" class="sketch-input w-24">
+                                            </div>
+                                        </div>
+                                        <button onclick="checkRoots()" class="sketch-btn px-6 py-2 bg-indigo-50 hover:bg-indigo-100 rounded">Check Answers</button>
+                                        <div id="feedback-roots" class="text-lg"></div>
+                                    </div>
+                                    
+                                    <!-- Success Banner -->
+                                    <div id="success-banner" class="hidden mt-6 bg-yellow-100 border-4 border-yellow-400 p-4 rounded-lg shadow-[4px_4px_0px_0px_rgba(234,179,8,1)] animate-pop">
+                                        <h3 class="text-2xl font-bold sketch-font text-yellow-800">🎉 Square Completed! 🎉</h3>
+                                        <p class="text-yellow-900 mt-1">Excellent work.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SDG BOX -->
+                <div class="bg-emerald-50 border-4 border-slate-800 rounded-xl p-4 flex items-center gap-4 shadow-[4px_4px_0px_0px_rgba(30,41,59,1)]">
+                    <div class="shrink-0 w-14 h-14 bg-emerald-600 rounded flex items-center justify-center text-white font-bold text-2xl shadow-sm">4</div>
+                    <div>
+                        <h3 class="font-bold text-emerald-900 text-sm uppercase">Quality Education</h3>
+                        <p class="text-xs text-emerald-800 leading-tight">Visualizing algebraic structures builds deep conceptual understanding.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: Visualisation -->
+            <div class="md:col-span-5 space-y-6">
+                <!-- GRAPH CANVAS -->
+                <div class="bg-white border-4 border-slate-800 rounded-xl overflow-hidden relative shadow-[8px_8px_0px_0px_rgba(30,41,59,1)]">
+                    <div class="absolute top-2 left-2 z-10 bg-white/90 px-2 py-1 border border-slate-800 rounded text-xs font-bold sketch-font">
+                        Verification Graph
+                    </div>
+                    <div id="canvas-wrapper" class="w-full aspect-square bg-white cursor-crosshair relative">
+                        <canvas id="geoCanvas"></canvas>
+                    </div>
+                    <div class="p-3 border-t-4 border-slate-800 bg-slate-50 text-center">
+                        <div class="flex justify-center gap-6 text-sm font-bold sketch-font">
+                            <div class="flex items-center gap-2">
+                                <span class="block w-4 h-4 bg-blue-500 rounded-full border border-black"></span> Parabola
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="block w-3 h-3 bg-red-500 rounded-full border border-black"></span> Roots
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tip Box -->
+                <div id="tip-box" class="bg-amber-50 border-4 border-slate-800 rounded-xl p-6 shadow-[4px_4px_0px_0px_rgba(30,41,59,1)] relative overflow-hidden transition-all">
+                    <div class="absolute -right-4 -top-4 w-16 h-16 bg-amber-200 rounded-full opacity-50"></div>
+                    <h4 class="font-bold text-amber-900 sketch-font text-lg mb-2">Teacher's Tip:</h4>
+                    <p id="tip-text" class="text-sm text-amber-800 italic">
+                        "Completing the square is all about geometry! We are physically rearranging the area to make a square."
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONSTANTS & CONFIG ---
+        const KATEX_CONFIG = {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            throwOnError: false
+        };
+
+        const canvas = document.getElementById('geoCanvas');
+        const sqCanvas = document.getElementById('squareCanvas');
+        const ctx = canvas.getContext('2d');
+        const sqCtx = sqCanvas.getContext('2d');
+        const roughCanvas = rough.canvas(canvas);
+        const roughSqCanvas = rough.canvas(sqCanvas);
+        
+        let currentProblem = null;
+        let scale = 20; 
+        let origin = { x: 0, y: 0 };
+        let showRoots = false;
+        
+        // Animation State
+        let animProgress = 0; // 0 to 1
+        let isAnimating = false;
+        let animationId = null;
+        
+        // Step States
+        let stepState = {
+            normalizedB: 0, // b/a
+            normalizedC: 0, // c/a
+            magicNumber: 0,
+            rhsStep1: 0,
+            factorP: 0,
+            rhsStep3: 0
+        };
+
+        // --- UTILITIES ---
+        const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        // PARSER for fractions
+        function parseInput(val) {
+            if (!val) return NaN;
+            val = val.toString().trim();
+            if (val.includes('/')) {
+                const parts = val.split('/');
+                if (parts.length !== 2) return NaN;
+                const num = parseFloat(parts[0]);
+                const den = parseFloat(parts[1]);
+                if (isNaN(num) || isNaN(den) || den === 0) return NaN;
+                return num / den;
+            }
+            return parseFloat(val);
+        }
+
+        // FORMATTER for fractions (visual feedback)
+        function toFractionTex(x) {
+            if (Math.abs(Math.round(x) - x) < 0.0001) return Math.round(x).toString();
+            
+            // Limit denominator search for performance and relevance
+            const maxDenom = 20;
+            let bestNum = 0, bestDen = 1, minErr = Infinity;
+
+            for (let d = 1; d <= maxDenom; d++) {
+                let n = Math.round(x * d);
+                let err = Math.abs(x - n / d);
+                if (err < minErr) {
+                    minErr = err;
+                    bestNum = n;
+                    bestDen = d;
+                }
+            }
+            
+            if (minErr < 0.0001) {
+                return `\\frac{${bestNum}}{${bestDen}}`;
+            }
+            return x.toFixed(2);
+        }
+
+        // FORMATTER for canvas (simple string)
+        function formatNum(n) {
+            if (Math.abs(Math.round(n) - n) < 0.001) return Math.round(n).toString();
+            // Try simple fractions
+            for(let d=2; d<=16; d++) {
+                let nom = n * d;
+                if (Math.abs(Math.round(nom) - nom) < 0.001) {
+                    return Math.round(nom) + "/" + d;
+                }
+            }
+            return n.toFixed(2).replace(/[.,]00$/, "");
+        }
+
+        // --- PROBLEM GENERATION ---
+        function generateProblem() {
+            const optMonic = document.getElementById('opt-monic').checked;
+            const optNonMonic = document.getElementById('opt-nonmonic').checked;
+
+            let types = [];
+            if (optMonic) types.push('monic');
+            if (optNonMonic) types.push('nonmonic');
+            
+            if (types.length === 0) {
+                types.push('monic');
+                document.getElementById('opt-monic').checked = true;
+            }
+            
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            let a, b, c, delta;
+            let attempt = 0;
+            
+            do {
+                attempt++;
+                
+                if (type === 'monic') {
+                    a = 1;
+                    b = (Math.random() > 0.3) ? 2 * rnd(-4, 4) : rnd(-8, 8);
+                    if (b === 0) b = 2;
+                    c = rnd(-10, 10);
+                } else {
+                    a = rnd(2, 4);
+                    if (Math.random() > 0.5) a *= -1;
+                    let k = rnd(-4, 4);
+                    if (k === 0) k = 2;
+                    b = a * k; 
+                    c = rnd(-15, 15);
+                }
+                
+                delta = b*b - 4*a*c;
+                
+                if (delta < 0) continue;
+                if (a === 0) continue;
+                
+                break;
+            } while (attempt < 200);
+            
+            if (attempt >= 200) { a=1; b=4; c=-5; delta=36; } 
+
+            currentProblem = { a, b, c, delta };
+            
+            stepState.normalizedB = b / a;
+            stepState.normalizedC = c / a;
+            stepState.rhsStep1 = -stepState.normalizedC; 
+            stepState.magicNumber = Math.pow(stepState.normalizedB / 2, 2);
+            stepState.factorP = stepState.normalizedB / 2;
+            stepState.rhsStep3 = stepState.rhsStep1 + stepState.magicNumber;
+
+            // UI Setup
+            let eqStr = "";
+            if(Math.abs(a) === 1) eqStr += (a < 0 ? "-" : "") + "x^2";
+            else eqStr += a + "x^2";
+            if(b !== 0) {
+                if(b > 0) eqStr += " + "; else eqStr += " - ";
+                if(Math.abs(b) !== 1) eqStr += Math.abs(b) + "x"; else eqStr += "x";
+            }
+            if(c !== 0) {
+                if(c > 0) eqStr += " + " + c; else eqStr += " - " + Math.abs(c);
+            }
+            eqStr += " = 0";
+
+            katex.render(eqStr, document.getElementById('problem-text'), KATEX_CONFIG);
+            
+            resetUI();
+            
+            // Step 1 Flow Control
+            if (a === 1) {
+                document.getElementById('step1-divide-section').classList.add('hidden');
+                document.getElementById('step1-simplify-section').classList.add('hidden');
+                document.getElementById('step1-isolate-section').classList.remove('hidden', 'opacity-50', 'pointer-events-none');
+            } else {
+                document.getElementById('step1-divide-section').classList.remove('hidden');
+                document.getElementById('step1-simplify-section').classList.add('hidden'); // hidden initially
+                document.getElementById('step1-isolate-section').classList.add('hidden');  // hidden initially
+            }
+
+            document.getElementById('disp-sign-b').textContent = (stepState.normalizedB >= 0 ? "+" : "-");
+            document.getElementById('disp-val-b').textContent = formatNum(Math.abs(stepState.normalizedB));
+
+            showRoots = false;
+            animProgress = 0; // Reset animation
+            isAnimating = false;
+            resizeCanvas();
+            drawSquareStep(false); 
+        }
+
+        // --- UI LOGIC ---
+        function resetUI() {
+            document.querySelectorAll('input').forEach(i => {
+                if(i.type === 'text' || i.type === 'number') i.value = '';
+            });
+            document.querySelectorAll('[id^=feedback]').forEach(d => d.innerHTML = '');
+            
+            resetBox('box-step1', true);
+            
+            document.getElementById('box-step2').classList.add('opacity-50', 'pointer-events-none', 'bg-slate-50');
+            document.getElementById('box-step2').classList.remove('bg-white', 'border-indigo-200');
+            
+            document.getElementById('box-step3').classList.add('opacity-50', 'pointer-events-none', 'bg-slate-50');
+            document.getElementById('box-step3').classList.remove('bg-white', 'border-indigo-200');
+            
+            document.getElementById('box-step4').classList.add('opacity-50', 'pointer-events-none', 'bg-slate-50');
+            document.getElementById('box-step4').classList.remove('bg-white', 'border-indigo-200');
+            
+            document.getElementById('step4-final').classList.add('hidden', 'opacity-50', 'pointer-events-none');
+            document.getElementById('step4-final').classList.remove('opacity-100', 'pointer-events-auto');
+            
+            document.getElementById('success-banner').classList.add('hidden');
+            
+            document.getElementById('step1-simplify-section').classList.add('opacity-50', 'pointer-events-none');
+            document.getElementById('step1-simplify-section').classList.remove('opacity-100', 'pointer-events-auto');
+            
+            document.getElementById('step1-isolate-section').classList.add('opacity-50', 'pointer-events-none');
+            document.getElementById('step1-isolate-section').classList.remove('opacity-100', 'pointer-events-auto');
+        }
+
+        function resetBox(id, active) {
+            const el = document.getElementById(id);
+            if (active) {
+                el.classList.remove('opacity-50', 'pointer-events-none', 'bg-slate-50', 'border-dashed', 'border-slate-300');
+                el.classList.add('bg-white', 'border-4', 'border-indigo-200');
+            } else {
+                el.classList.add('opacity-50', 'pointer-events-none', 'bg-slate-50', 'border-dashed', 'border-slate-300');
+                el.classList.remove('bg-white', 'border-4', 'border-indigo-200');
+            }
+        }
+
+        function feedback(id, isCorrect, msg="") {
+            const el = document.getElementById(id);
+            if(isCorrect) el.innerHTML = `<span class="text-emerald-600 font-bold">✓</span>`;
+            else {
+                el.innerHTML = `<span class="text-red-500 font-bold">✗ ${msg}</span>`;
+                if(msg.includes('$') || msg.includes('\\')) {
+                    renderMathInElement(el, KATEX_CONFIG);
+                }
+            }
+        }
+
+        // --- STEP 1 LOGIC ---
+        function checkDivide() {
+            const val = parseInput(document.getElementById('input-divide').value);
+            if (Math.abs(val - currentProblem.a) < 0.01) {
+                feedback('feedback-divide', true);
+                const el = document.getElementById('step1-simplify-section');
+                el.classList.remove('hidden', 'opacity-50', 'pointer-events-none');
+                el.classList.add('opacity-100', 'pointer-events-auto');
+                try { renderMathInElement(el, KATEX_CONFIG); } catch(e){}
+            } else {
+                feedback('feedback-divide', false, "Look at x² term");
+            }
+        }
+
+        function checkSimplify() {
+            const bVal = parseInput(document.getElementById('input-simp-b').value);
+            const cVal = parseInput(document.getElementById('input-simp-c').value);
+            
+            const checkB = Math.abs(bVal - stepState.normalizedB) < 0.01;
+            const checkC = Math.abs(cVal - stepState.normalizedC) < 0.01;
+            
+            if (checkB && checkC) {
+                feedback('feedback-simplify', true);
+                const el = document.getElementById('step1-isolate-section');
+                el.classList.remove('hidden', 'opacity-50', 'pointer-events-none');
+                el.classList.add('opacity-100', 'pointer-events-auto');
+                try { renderMathInElement(el, KATEX_CONFIG); } catch(e){}
+            } else {
+                let msg = "";
+                if(!checkB) msg += "Check b ($" + toFractionTex(stepState.normalizedB) + "$) ";
+                if(!checkC) msg += "Check c ($" + toFractionTex(stepState.normalizedC) + "$)";
+                feedback('feedback-simplify', false, msg);
+            }
+        }
+
+        function checkStep1() {
+            const input = parseInput(document.getElementById('input-step1-rhs').value);
+            if (Math.abs(input - stepState.rhsStep1) < 0.01) {
+                feedback('feedback-step1', true);
+                resetBox('box-step2', true);
+                drawSquareStep(false); 
+                document.getElementById('tip-text').innerText = `To make a square, we split ${formatNum(stepState.normalizedB)}x into two equal pieces.`;
+            } else {
+                feedback('feedback-step1', false, "Expected $" + toFractionTex(stepState.rhsStep1) + "$");
+            }
+        }
+
+        // --- STEP 2: MAGIC NUMBER & ANIMATION ---
+        function checkStep2() {
+            const input = parseInput(document.getElementById('input-magic').value);
+            if (Math.abs(input - stepState.magicNumber) < 0.01) {
+                feedback('feedback-step2', true);
+                resetBox('box-step3', true);
+                // Force animation to complete state
+                animProgress = 1;
+                drawSquareStep(true); 
+                document.getElementById('tip-text').innerText = "Now add this magic number to BOTH sides and factorise.";
+            } else {
+                feedback('feedback-step2', false, `Try $(${toFractionTex(stepState.normalizedB)} / 2 )^2$`);
+            }
+        }
+
+        function triggerAnimation() {
+            if (isAnimating) return;
+            isAnimating = true;
+            animProgress = 0;
+            animate();
+        }
+
+        function animate() {
+            animProgress += 0.02; // Speed
+            if (animProgress > 1) {
+                animProgress = 1;
+                isAnimating = false;
+            }
+            drawSquareStep(animProgress === 1);
+            if (isAnimating) requestAnimationFrame(animate);
+        }
+
+        // --- STEP 3: FACTORISE ---
+        function checkStep3() {
+            const p = parseInput(document.getElementById('input-step3-p').value);
+            const q = parseInput(document.getElementById('input-step3-q').value);
+            
+            const checkP = Math.abs(p - stepState.factorP) < 0.01;
+            const checkQ = Math.abs(q - stepState.rhsStep3) < 0.01; 
+            
+            if (checkP && checkQ) {
+                feedback('feedback-step3', true);
+                resetBox('box-step4', true);
+                document.getElementById('tip-text').innerText = "Finally, square root both sides to solve for x.";
+            } else {
+                let msg = "";
+                if(!checkP) msg += "Check p ($" + toFractionTex(stepState.factorP) + "$) ";
+                if(!checkQ) msg += "Check Total ($" + toFractionTex(stepState.rhsStep3) + "$)";
+                feedback('feedback-step3', false, msg);
+            }
+        }
+
+        // --- STEP 4: SOLVE ---
+        function checkRearrange() {
+            const pVal = parseInput(document.getElementById('input-rearrange-p').value);
+            const kVal = parseInput(document.getElementById('input-rearrange-k').value);
+            
+            const expectedP = -stepState.factorP;
+            const expectedK = stepState.rhsStep3;
+            
+            const checkP = Math.abs(pVal - expectedP) < 0.01;
+            const checkK = Math.abs(kVal - expectedK) < 0.01;
+            
+            if(checkP && checkK) {
+                feedback('feedback-rearrange', true);
+                const finalBox = document.getElementById('step4-final');
+                finalBox.classList.remove('hidden', 'opacity-50', 'pointer-events-none');
+                finalBox.classList.add('opacity-100', 'pointer-events-auto');
+                try { renderMathInElement(finalBox, KATEX_CONFIG); } catch(e){}
+            } else {
+                let msg = "";
+                if(!checkP) msg += "Check const ($" + toFractionTex(expectedP) + "$) ";
+                if(!checkK) msg += "Check sqrt ($" + toFractionTex(expectedK) + "$)";
+                feedback('feedback-rearrange', false, msg);
+            }
+        }
+
+        function checkRoots() {
+            const u1 = parseFloat(document.getElementById('input-root-1').value);
+            const u2 = parseFloat(document.getElementById('input-root-2').value);
+            
+            if(isNaN(u1) || isNaN(u2)) { feedback('feedback-roots', false, "Enter roots"); return; }
+
+            const r1 = (-currentProblem.b + Math.sqrt(currentProblem.delta)) / (2*currentProblem.a);
+            const r2 = (-currentProblem.b - Math.sqrt(currentProblem.delta)) / (2*currentProblem.a);
+            
+            const match1 = (Math.abs(u1 - r1) < 0.05 && Math.abs(u2 - r2) < 0.05);
+            const match2 = (Math.abs(u1 - r2) < 0.05 && Math.abs(u2 - r1) < 0.05);
+            
+            if (match1 || match2) {
+                feedback('feedback-roots', true, "Correct!");
+                document.getElementById('success-banner').classList.remove('hidden');
+                showRoots = true;
+                drawGraph(); 
+            } else {
+                feedback('feedback-roots', false, "Check calculation");
+            }
+        }
+
+        // --- VISUALISATION: GEOMETRIC SQUARE + ANIMATION ---
+        function drawSquareStep(completed) {
+            sqCtx.clearRect(0, 0, sqCanvas.width, sqCanvas.height);
+            const w = sqCanvas.width;
+            const h = sqCanvas.height;
+            
+            const pad = 30;
+            const available = w - 2*pad;
+            const unit = available / 2.0; 
+            
+            const xSize = unit; 
+            const bVis = Math.min((unit * Math.abs(stepState.normalizedB/2)) / 2, unit * 0.4); 
+
+            // Calculate start coordinates to center the "Start" state (x^2 + 2 strips side-by-side)
+            const totalStartW = xSize + 2 * bVis;
+            const startX = (w - totalStartW) / 2;
+            const startY = (h - xSize) / 2 + bVis/2; // Push down slightly
+
+            // 1. Draw x^2 (Main Square) - Always Static
+            roughSqCanvas.rectangle(startX, startY, xSize, xSize, { fill: '#60a5fa', fillStyle: 'solid', stroke: '#1e3a8a' });
+            sqCtx.fillStyle = "white"; sqCtx.font = "bold 20px sans-serif";
+            sqCtx.fillText("x²", startX + xSize/2 - 10, startY + xSize/2 + 5);
+
+            // ANIMATION LOGIC:
+            // "Static" Strip (stays on right)
+            roughSqCanvas.rectangle(startX + xSize, startY, bVis, xSize, { fill: '#4ade80', fillStyle: 'solid', stroke: '#14532d' });
+            
+            // "Moving" Strip (starts next to static, moves to top)
+            const start_anim_x = startX + xSize + bVis;
+            const start_anim_y = startY; 
+            const start_w = bVis;
+            const start_h = xSize;
+            
+            const end_anim_x = startX;
+            const end_anim_y = startY - bVis;
+            const end_w = xSize;
+            const end_h = bVis;
+            
+            const cur_x = start_anim_x * (1-animProgress) + end_anim_x * animProgress;
+            const cur_y = start_anim_y * (1-animProgress) + end_anim_y * animProgress;
+            const cur_w = start_w * (1-animProgress) + end_w * animProgress;
+            const cur_h = start_h * (1-animProgress) + end_h * animProgress;
+            
+            roughSqCanvas.rectangle(cur_x, cur_y, cur_w, cur_h, { fill: '#4ade80', fillStyle: 'solid', stroke: '#14532d' });
+            
+            // LABELS
+            sqCtx.fillStyle = "#064e3b"; sqCtx.font = "12px sans-serif";
+            const bFullStr = formatNum(Math.abs(stepState.normalizedB));
+            const bHalfStr = formatNum(Math.abs(stepState.normalizedB/2));
+
+            if (animProgress < 0.1) {
+                // Show "Full" label for the two right blocks
+                sqCtx.fillStyle = "#000";
+                sqCtx.font = "bold 14px sans-serif";
+                
+                // Draw bracket line
+                sqCtx.beginPath();
+                sqCtx.moveTo(startX + xSize, startY + xSize + 10);
+                sqCtx.lineTo(startX + xSize + 2*bVis, startY + xSize + 10);
+                sqCtx.strokeStyle = "#000";
+                sqCtx.lineWidth = 2;
+                sqCtx.stroke();
+                
+                sqCtx.fillText(bFullStr + "x", startX + xSize + bVis - 10, startY + xSize + 25);
+            } else {
+                // Static Label
+                sqCtx.fillStyle = "#064e3b";
+                sqCtx.fillText(bHalfStr + "x", startX + xSize + bVis/2 - 10, startY + xSize/2 + 5);
+                
+                // Moving Label (follow center)
+                if (animProgress > 0.9) {
+                     // Settled on top
+                     sqCtx.fillText(bHalfStr + "x", startX + xSize/2 - 10, startY - bVis/2 + 5);
+                }
+            }
+
+            // 4. Draw Corner (Missing or Completed)
+            if (completed && animProgress > 0.9) {
+                const alpha = isAnimating ? (animProgress > 0.9 ? (animProgress-0.9)*10 : 0) : 1; 
+                roughSqCanvas.rectangle(startX + xSize, startY - bVis, bVis, bVis, { fill: `rgba(250, 204, 21, ${alpha})`, fillStyle: 'hachure', stroke: '#a16207' });
+                
+                if(alpha > 0.5) {
+                    sqCtx.fillStyle = "#854d0e";
+                    sqCtx.fillText("?", startX + xSize + bVis/2 - 5, startY - bVis/2 + 5);
+                }
+                
+                // Outer Dashed Border
+                if(alpha > 0.8) {
+                    roughSqCanvas.rectangle(startX, startY - bVis, xSize + bVis, xSize + bVis, { stroke: '#ef4444', strokeWidth: 2, strokeStyle: 'dashed' });
+                }
+            } else if (!completed) {
+                roughSqCanvas.rectangle(startX + xSize, startY - bVis, bVis, bVis, { stroke: '#94a3b8', strokeStyle: 'dashed' });
+            }
+        }
+
+        // --- VISUALISATION: GRAPH ---
+        function resizeCanvas() {
+            const wrapper = document.getElementById('canvas-wrapper');
+            canvas.width = wrapper.clientWidth;
+            canvas.height = wrapper.clientHeight;
+            
+            const sqWrap = document.getElementById('box-step2');
+            sqCanvas.width = sqWrap.clientWidth > 0 ? 192 : 192; 
+            sqCanvas.height = 192;
+            
+            drawGraph();
+            
+            if (Math.abs(parseInput(document.getElementById('input-step1-rhs').value) - stepState.rhsStep1) < 0.01) {
+                const magic = parseInput(document.getElementById('input-magic').value);
+                const step2Done = Math.abs(magic - stepState.magicNumber) < 0.01;
+                // Keep animation finished if step done
+                if(step2Done) animProgress = 1;
+                drawSquareStep(step2Done);
+            }
+        }
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if(!currentProblem) return;
+
+            const w = canvas.width;
+            const h = canvas.height;
+            const originX = w / 2;
+            const originY = h / 2;
+            
+            const vx = -currentProblem.b / (2 * currentProblem.a);
+            const vy = currentProblem.c - (currentProblem.b * currentProblem.b) / (4 * currentProblem.a);
+            
+            const dist = Math.sqrt(Math.abs(currentProblem.delta)) / (2 * Math.abs(currentProblem.a));
+            const maxX = Math.max(Math.abs(vx + dist), Math.abs(vx - dist), 5);
+            const maxY = Math.max(Math.abs(vy), 10);
+            
+            scale = Math.min(w/(2.5*maxX), h/(2.5*maxY));
+            if(scale < 5) scale = 5; 
+
+            const toScreen = (x, y) => ({ x: originX + x * scale, y: originY - y * scale });
+
+            // Axes
+            ctx.beginPath(); ctx.strokeStyle = "#cbd5e1"; ctx.lineWidth = 1;
+            const pX1 = toScreen(-50, 0); const pX2 = toScreen(50, 0);
+            ctx.moveTo(pX1.x, pX1.y); ctx.lineTo(pX2.x, pX2.y);
+            const pY1 = toScreen(0, -50); const pY2 = toScreen(0, 50);
+            ctx.moveTo(pY1.x, pY1.y); ctx.lineTo(pY2.x, pY2.y);
+            ctx.stroke();
+
+            // Rough Axes
+            roughCanvas.line(0, originY, w, originY, { stroke: '#334155', strokeWidth: 2 });
+            roughCanvas.line(originX, 0, originX, h, { stroke: '#334155', strokeWidth: 2 });
+
+            // Plot
+            const step = 0.1;
+            const points = [];
+            const rangeX = w / (2*scale);
+            for(let x = -rangeX; x <= rangeX; x += step) {
+                const y = currentProblem.a * x * x + currentProblem.b * x + currentProblem.c;
+                const p = toScreen(x, y);
+                if(p.y > -100 && p.y < h + 100) points.push([p.x, p.y]);
+            }
+            roughCanvas.curve(points, { stroke: '#3b82f6', strokeWidth: 3 });
+
+            // Roots
+            if (showRoots && currentProblem.delta >= 0) {
+                const r1 = (-currentProblem.b + Math.sqrt(currentProblem.delta)) / (2*currentProblem.a);
+                const r2 = (-currentProblem.b - Math.sqrt(currentProblem.delta)) / (2*currentProblem.a);
+                const p1 = toScreen(r1, 0);
+                const p2 = toScreen(r2, 0);
+                roughCanvas.circle(p1.x, p1.y, 8, { fill: '#ef4444', fillStyle: 'solid', stroke: 'none' });
+                roughCanvas.circle(p2.x, p2.y, 8, { fill: '#ef4444', fillStyle: 'solid', stroke: 'none' });
+            }
+        }
+
+        // --- INIT ---
+        window.addEventListener('resize', resizeCanvas);
+        document.getElementById('resetBtn').addEventListener('click', generateProblem);
+        
+        generateProblem();
+
+        renderMathInElement(document.body, KATEX_CONFIG);
+
+    </script>
+</body>
+</html>
