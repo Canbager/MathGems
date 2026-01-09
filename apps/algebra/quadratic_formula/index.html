@@ -83,6 +83,25 @@
         .sketch-checkbox:checked::before {
             transform: scale(1);
         }
+        
+        /* Math Fraction Layout for Inputs */
+        .math-frac {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 5px;
+        }
+        .math-frac-top {
+            border-bottom: 2px solid black;
+            padding-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .math-frac-bottom {
+            padding-top: 2px;
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen p-4 md:p-8">
@@ -103,15 +122,15 @@
             
             <div class="flex flex-wrap gap-4 items-center bg-slate-100 p-3 rounded-lg border-2 border-slate-800">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                    <input type="checkbox" id="opt-factor" class="sketch-checkbox" checked>
+                    <input type="checkbox" id="opt-factor" class="sketch-checkbox" checked onchange="generateProblem()">
                     <span class="font-bold text-slate-700 text-sm">Perfect Squares</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                    <input type="checkbox" id="opt-surd" class="sketch-checkbox">
+                    <input type="checkbox" id="opt-surd" class="sketch-checkbox" onchange="generateProblem()">
                     <span class="font-bold text-slate-700 text-sm">Surds (Hard Mode)</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                    <input type="checkbox" id="opt-complex" class="sketch-checkbox">
+                    <input type="checkbox" id="opt-complex" class="sketch-checkbox" onchange="generateProblem()">
                     <span class="font-bold text-slate-700 text-sm">No Real Roots</span>
                 </label>
                 <button id="resetBtn" class="bg-white border-2 border-slate-800 px-4 py-1 rounded sketch-font font-bold hover:bg-yellow-50 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all">
@@ -193,32 +212,76 @@
                             <div id="box-step3" class="step-box opacity-50 pointer-events-none bg-slate-50 border-2 border-dashed border-slate-300 p-4 rounded-lg relative">
                                 <div class="absolute -top-3 left-4 bg-slate-200 px-2 border border-slate-300 rounded text-sm font-bold text-slate-500 sketch-font">Step 3: Solve</div>
                                 
+                                <!-- REFINEMENT 3: ESTIMATION -->
+                                <div id="estimation-section" class="hidden mb-6 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-lg text-center animate-pop">
+                                    <p class="font-bold text-yellow-800 sketch-font text-lg">🎯 Estimation Mission!</p>
+                                    <p class="text-sm text-yellow-700">Click on the graph where you think the roots are. (Guesses: <span id="est-count">0</span>/2)</p>
+                                    <p id="est-feedback" class="font-bold mt-2 min-h-[1.5em]"></p>
+                                </div>
+
                                 <!-- Mode: Factorise -->
                                 <div id="mode-factorise" class="hidden mt-2 space-y-4 text-center">
-                                    <p class="sketch-font text-slate-600">Create the factorised version:</p>
-                                    <div class="flex items-center justify-center gap-1 text-xl sketch-font flex-wrap">
-                                        <span>(</span>
-                                        <input type="number" id="input-fac-a1" class="sketch-input w-12 p-1" placeholder="p">
-                                        <span>x + </span>
-                                        <input type="number" id="input-fac-c1" class="sketch-input w-12 p-1" placeholder="q">
-                                        <span>)(</span>
-                                        <input type="number" id="input-fac-a2" class="sketch-input w-12 p-1" placeholder="r">
-                                        <span>x + </span>
-                                        <input type="number" id="input-fac-c2" class="sketch-input w-12 p-1" placeholder="s">
-                                        <span>) = 0</span>
+                                    <p class="sketch-font text-slate-600 mb-2">Create the factorised version:</p>
+                                    
+                                    <!-- Visual Support for Factorising -->
+                                    <div id="factor-hint-container"></div>
+
+                                    <!-- REFINEMENT 2: SPLIT MIDDLE TERM -->
+                                    <div id="split-term-container" class="bg-indigo-50 p-3 rounded border border-indigo-100 mb-4 animate-pop">
+                                        <p class="text-sm text-indigo-800 font-bold mb-2">1. Split the middle term ($bx$)</p>
+                                        <div class="flex items-center justify-center gap-2">
+                                            <input type="number" id="split-1" class="sketch-input w-16" placeholder="?">
+                                            <span class="font-bold">+</span>
+                                            <input type="number" id="split-2" class="sketch-input w-16" placeholder="?">
+                                            <span class="font-bold">=</span>
+                                            <span id="disp-b-split" class="font-bold"></span>
+                                            <button onclick="checkSplitTerm()" class="ml-2 sketch-btn px-3 py-1 bg-white hover:bg-indigo-50 rounded text-xs">Check Split</button>
+                                        </div>
+                                        <div id="feedback-split" class="text-sm mt-1 min-h-[1.25em]"></div>
                                     </div>
-                                    <p class="text-xs text-slate-400">Enter coefficients (e.g. for $x-3$, enter $1x + -3$)</p>
-                                    <button onclick="checkFactors()" class="sketch-btn px-6 py-2 bg-indigo-50 hover:bg-indigo-100 rounded">Check Factors</button>
-                                    <div id="feedback-factors" class="text-lg"></div>
+
+                                    <div id="final-factor-container" class="hidden opacity-50 pointer-events-none transition-opacity">
+                                        <p class="text-sm text-indigo-800 font-bold mb-2">2. Final Factors</p>
+                                        <div class="flex items-center justify-center gap-1 text-xl sketch-font flex-wrap">
+                                            <span>(</span>
+                                            <input type="number" id="input-fac-a1" class="sketch-input w-12 p-1" placeholder="a">
+                                            <span>x + </span>
+                                            <input type="number" id="input-fac-c1" class="sketch-input w-12 p-1" placeholder="b">
+                                            <span>)(</span>
+                                            <input type="number" id="input-fac-a2" class="sketch-input w-12 p-1" placeholder="c">
+                                            <span>x + </span>
+                                            <input type="number" id="input-fac-c2" class="sketch-input w-12 p-1" placeholder="d">
+                                            <span>) = 0</span>
+                                        </div>
+                                        <button onclick="checkFactors()" class="mt-4 sketch-btn px-6 py-2 bg-indigo-50 hover:bg-indigo-100 rounded">Check Factors</button>
+                                        <div id="feedback-factors" class="text-lg"></div>
+                                    </div>
                                 </div>
 
                                 <!-- Mode: Formula -->
                                 <div id="mode-formula" class="hidden mt-2 space-y-4 text-center">
                                     <p class="sketch-font text-slate-600">Using: $ x = \frac{-b \pm \sqrt{\Delta}}{2a} $</p>
-                                    <div id="formula-display" class="bg-blue-50 p-4 rounded border border-blue-200 inline-block text-left text-lg">
-                                        <!-- Will be filled by JS -->
+                                    
+                                    <!-- REFINEMENT 1: FORMULA SCAFFOLDING -->
+                                    <div id="formula-scaffold" class="flex justify-center items-center sketch-font text-xl mb-4 animate-pop">
+                                        <span class="mr-2">x = </span>
+                                        <div class="math-frac">
+                                            <div class="math-frac-top">
+                                                <span>-</span>
+                                                <input type="number" id="form-b" class="sketch-input w-12 p-1 text-center" placeholder="b">
+                                                <span>±</span>
+                                                <span>√</span>
+                                                <input type="number" id="form-delta" class="sketch-input w-16 p-1 text-center" placeholder="Δ">
+                                            </div>
+                                            <div class="math-frac-bottom">
+                                                <input type="number" id="form-2a" class="sketch-input w-12 p-1 text-center" placeholder="2a">
+                                            </div>
+                                        </div>
+                                        <button onclick="checkFormulaInputs()" class="ml-4 sketch-btn px-3 py-2 bg-indigo-50 hover:bg-indigo-100 rounded text-sm">Check Setup</button>
                                     </div>
-                                    <div class="space-y-2">
+                                    <div id="feedback-formula-setup" class="text-lg mb-4"></div>
+
+                                    <div id="final-roots-container" class="hidden opacity-50 pointer-events-none transition-opacity space-y-2">
                                         <p class="text-sm text-slate-500">Enter final values (2 decimal places):</p>
                                         <div class="flex justify-center gap-4">
                                             <div class="flex items-center gap-1">
@@ -228,9 +291,9 @@
                                                 $x_2 =$ <input type="number" id="input-root-2" step="0.01" class="sketch-input w-24">
                                             </div>
                                         </div>
+                                        <button onclick="checkRoots()" class="mt-2 sketch-btn px-6 py-2 bg-indigo-50 hover:bg-indigo-100 rounded">Check Answers</button>
+                                        <div id="feedback-roots" class="text-lg"></div>
                                     </div>
-                                    <button onclick="checkRoots()" class="sketch-btn px-6 py-2 bg-indigo-50 hover:bg-indigo-100 rounded">Check Answers</button>
-                                    <div id="feedback-roots" class="text-lg"></div>
                                 </div>
 
                                 <!-- Mode: None -->
@@ -282,6 +345,9 @@
                             <div class="flex items-center gap-2">
                                 <span class="block w-3 h-3 bg-red-500 rounded-full border border-black"></span> Roots
                             </div>
+                            <div class="flex items-center gap-2">
+                                <span class="block w-3 h-3 bg-amber-500 rounded-full border border-black"></span> Guess
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -309,6 +375,10 @@
         let origin = { x: 0, y: 0 };
         let showCurve = true; 
         let showRoots = false;
+        
+        // Interactive States
+        let estimationActive = false;
+        let guesses = [];
 
         // --- UTILITIES ---
         const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -316,6 +386,7 @@
 
         // --- PROBLEM GENERATION ---
         function generateProblem() {
+            // Get user options
             const optFactor = document.getElementById('opt-factor').checked;
             const optSurd = document.getElementById('opt-surd').checked;
             const optComplex = document.getElementById('opt-complex').checked;
@@ -325,6 +396,7 @@
             if (optSurd) allowedTypes.push('surd');
             if (optComplex) allowedTypes.push('complex');
 
+            // SAFETY: If user unchecks the last box, force 'factor' back on to avoid empty state
             if (allowedTypes.length === 0) {
                 allowedTypes.push('factor');
                 document.getElementById('opt-factor').checked = true;
@@ -374,6 +446,8 @@
 
             currentProblem = { a, b, c, delta };
             showRoots = false;
+            estimationActive = false;
+            guesses = [];
             
             let eqStr = "";
             if(Math.abs(a) === 1) eqStr += (a < 0 ? "-" : "") + "x^2";
@@ -408,9 +482,12 @@
         // --- UI LOGIC ---
         function resetUI() {
             document.querySelectorAll('input').forEach(i => {
+                // Don't clear checkboxes
                 if(i.type === 'number') i.value = '';
             });
             document.querySelectorAll('[id^=feedback]').forEach(d => d.innerHTML = '');
+            document.getElementById('est-count').textContent = '0';
+            document.getElementById('est-feedback').textContent = '';
             
             resetBox('box-step1', true);
             resetBox('box-step2', false);
@@ -420,6 +497,14 @@
             document.getElementById('mode-formula').classList.add('hidden');
             document.getElementById('mode-none').classList.add('hidden');
             document.getElementById('success-banner').classList.add('hidden');
+            document.getElementById('factor-hint-container').innerHTML = ''; // Clear hint
+            document.getElementById('estimation-section').classList.add('hidden');
+            
+            // Reset Refinement Scaffolds
+            document.getElementById('final-factor-container').classList.add('hidden', 'opacity-50', 'pointer-events-none');
+            document.getElementById('final-factor-container').classList.remove('opacity-100', 'pointer-events-auto');
+            document.getElementById('final-roots-container').classList.add('hidden', 'opacity-50', 'pointer-events-none');
+            document.getElementById('final-roots-container').classList.remove('opacity-100', 'pointer-events-auto');
             
             document.getElementById('tip-text').innerText = "Start by identifying a, b, and c to find the discriminant.";
         }
@@ -444,14 +529,11 @@
         // --- STEP 1: DISCRIMINANT ---
         function checkDiscriminant() {
             const userD = parseFloat(document.getElementById('input-discriminant').value);
-            // Allow integer comparison safely for typical IGCSE ranges
             if (Math.abs(userD - currentProblem.delta) < 0.001) {
                 feedback('feedback-step1', true);
                 resetBox('box-step2', true);
                 document.getElementById('val-delta-display').textContent = userD;
-                // Safe re-render attempt for the step 2 container
                 try { renderMathInElement(document.getElementById('box-step2')); } catch(e){}
-                
                 document.getElementById('tip-text').innerText = "Now decide! Is the discriminant a perfect square (0, 1, 4, 9...)?";
             } else {
                 feedback('feedback-step1', false, "Check b² - 4ac");
@@ -485,6 +567,17 @@
             document.getElementById('mode-factorise').classList.add('hidden');
             document.getElementById('mode-formula').classList.add('hidden');
             document.getElementById('mode-none').classList.add('hidden');
+            document.getElementById('estimation-section').classList.add('hidden');
+
+            // REFINEMENT 3: Enable Estimation if roots exist
+            if (mode !== 'none') {
+                estimationActive = true;
+                guesses = [];
+                document.getElementById('estimation-section').classList.remove('hidden');
+                document.getElementById('est-count').textContent = '0';
+                document.getElementById('est-feedback').textContent = '';
+                // Reveal the section but not the final inputs yet
+            }
 
             if (mode === 'none') {
                 document.getElementById('mode-none').classList.remove('hidden');
@@ -493,20 +586,125 @@
                 resizeCanvas();
             } else if (mode === 'factor') {
                 document.getElementById('mode-factorise').classList.remove('hidden');
-                document.getElementById('tip-text').innerText = "Determine the coefficients that multiply to make the original equation.";
+                
+                // Visual Hint
+                const p = currentProblem;
+                const product = p.a * p.c;
+                const sum = p.b;
+                document.getElementById('factor-hint-container').innerHTML = `
+                    <div class="flex justify-center gap-4 text-sm sketch-font text-slate-700 mb-4 animate-pop">
+                        <div class="bg-green-100 px-3 py-2 rounded-lg border-2 border-green-300 shadow-[2px_2px_0px_0px_rgba(34,197,94,0.5)]">
+                            Multiply to: <span class="font-bold text-xl block text-center">${product}</span>
+                        </div>
+                        <div class="bg-blue-100 px-3 py-2 rounded-lg border-2 border-blue-300 shadow-[2px_2px_0px_0px_rgba(59,130,246,0.5)]">
+                            Add to: <span class="font-bold text-xl block text-center">${sum}</span>
+                        </div>
+                    </div>`;
+                document.getElementById('disp-b-split').innerText = sum; // For Split Term display
+                document.getElementById('tip-text').innerText = "Use the graph to guess roots, then use the AC method to solve!";
+                
                 try { renderMathInElement(document.getElementById('mode-factorise')); } catch(e){}
             } else {
                 document.getElementById('mode-formula').classList.remove('hidden');
-                document.getElementById('tip-text').innerText = "Substitute values carefully. Calculate the square root term first.";
-                
-                const p = currentProblem;
-                const formulaHTML = `$$ x = \\frac{-(${p.b}) \\pm \\sqrt{${p.delta}}}{2(${p.a})} $$`;
-                document.getElementById('formula-display').innerHTML = formulaHTML;
-                try { renderMathInElement(document.getElementById('mode-formula')); } catch(e){}
+                document.getElementById('tip-text').innerText = "Use the graph to guess roots, then fill in the formula template.";
+                // We use HTML inputs instead of KaTeX for the scaffold now, so no re-render needed for that specific block
             }
         }
 
-        // --- STEP 3: SOLVE ---
+        // --- GRAPH ESTIMATION (REFINEMENT 3) ---
+        canvas.addEventListener('mousedown', (e) => {
+            if (!estimationActive || guesses.length >= 2) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left);
+            const y = (e.clientY - rect.top);
+            
+            // Convert screen X to graph X
+            const graphX = (x - origin.x) / scale;
+            
+            guesses.push({screenX: x, screenY: y, val: graphX});
+            document.getElementById('est-count').textContent = guesses.length;
+            
+            drawGraph();
+            
+            if (guesses.length === 2) {
+                // Check closeness
+                const p = currentProblem;
+                const r1 = (-p.b + Math.sqrt(p.delta)) / (2*p.a);
+                const r2 = (-p.b - Math.sqrt(p.delta)) / (2*p.a);
+                
+                // Find closest pairs
+                let d1 = Math.min(Math.abs(guesses[0].val - r1), Math.abs(guesses[0].val - r2));
+                let d2 = Math.min(Math.abs(guesses[1].val - r1), Math.abs(guesses[1].val - r2));
+                
+                if (d1 < 1 && d2 < 1) {
+                    document.getElementById('est-feedback').innerHTML = `<span class="text-green-600">Great estimates! Now calculate the exact values.</span>`;
+                } else {
+                    document.getElementById('est-feedback').innerHTML = `<span class="text-amber-600">Good try! Let's find the exact values now.</span>`;
+                }
+                estimationActive = false; // Stop estimating
+            }
+        });
+
+        // --- SPLIT TERM (REFINEMENT 2) ---
+        function checkSplitTerm() {
+            const s1 = parseFloat(document.getElementById('split-1').value);
+            const s2 = parseFloat(document.getElementById('split-2').value);
+            
+            if (isNaN(s1) || isNaN(s2)) return feedback('feedback-split', false, "Enter both numbers");
+            
+            const p = currentProblem;
+            const targetProd = p.a * p.c;
+            const targetSum = p.b;
+            
+            const userSum = s1 + s2;
+            const userProd = s1 * s2;
+            
+            if (Math.abs(userSum - targetSum) < 0.01 && Math.abs(userProd - targetProd) < 0.01) {
+                feedback('feedback-split', true, "Correct!");
+                // Reveal final step
+                const finalBox = document.getElementById('final-factor-container');
+                finalBox.classList.remove('hidden', 'opacity-50', 'pointer-events-none');
+                finalBox.classList.add('opacity-100', 'pointer-events-auto');
+            } else {
+                feedback('feedback-split', false, `Sum: ${userSum} (need ${targetSum}), Prod: ${userProd} (need ${targetProd})`);
+            }
+        }
+
+        // --- FORMULA SCAFFOLD (REFINEMENT 1) ---
+        function checkFormulaInputs() {
+            const inB = parseFloat(document.getElementById('form-b').value);
+            const inD = parseFloat(document.getElementById('form-delta').value);
+            const in2a = parseFloat(document.getElementById('form-2a').value);
+            
+            const p = currentProblem;
+            
+            // Check logic: 
+            // Top left should be 'b' (formula says -b, input placeholder says b, usually students put b there because minus is outside)
+            // But sometimes prompts imply putting the signed value.
+            // Formula displayed in app: x = (-[ ] +/- sqrt([ ])) / [ ]
+            // So box 1 should be 'b'. 
+            
+            const checkB = Math.abs(inB - p.b) < 0.01;
+            const checkD = Math.abs(inD - p.delta) < 0.01;
+            const check2a = Math.abs(in2a - (2*p.a)) < 0.01;
+            
+            if (checkB && checkD && check2a) {
+                feedback('feedback-formula-setup', true, "Template correct!");
+                // Reveal final step
+                const finalBox = document.getElementById('final-roots-container');
+                finalBox.classList.remove('hidden', 'opacity-50', 'pointer-events-none');
+                finalBox.classList.add('opacity-100', 'pointer-events-auto');
+            } else {
+                let msg = [];
+                if(!checkB) msg.push("Check b");
+                if(!checkD) msg.push("Check Δ");
+                if(!check2a) msg.push("Check 2a");
+                feedback('feedback-formula-setup', false, msg.join(", "));
+            }
+        }
+
+        // --- STEP 3: SOLVE (FINAL) ---
         function checkFactors() {
             const a1 = parseFloat(document.getElementById('input-fac-a1').value);
             const c1 = parseFloat(document.getElementById('input-fac-c1').value);
@@ -518,16 +716,11 @@
                 return; 
             }
 
-            // Expand: (a1*a2)x^2 + (a1*c2 + a2*c1)x + (c1*c2)
             const calcA = a1 * a2;
             const calcB = a1 * c2 + a2 * c1;
             const calcC = c1 * c2;
             
-            const targetA = currentProblem.a;
-            const targetB = currentProblem.b;
-            const targetC = currentProblem.c;
-            
-            const matchExact = (Math.abs(calcA - targetA) < 0.01 && Math.abs(calcB - targetB) < 0.01 && Math.abs(calcC - targetC) < 0.01);
+            const matchExact = (Math.abs(calcA - currentProblem.a) < 0.01 && Math.abs(calcB - currentProblem.b) < 0.01 && Math.abs(calcC - currentProblem.c) < 0.01);
             
             if (matchExact) {
                 feedback('feedback-factors', true, "Correct Factors!");
@@ -552,12 +745,10 @@
             let match1 = false;
             let match2 = false;
 
-            // Handle repeated roots case (Delta = 0)
             if (Math.abs(currentProblem.delta) < 0.001) {
-                // If user enters the single root in either box, we count it
                 const val = !isNaN(u1) ? u1 : u2;
                 if (Math.abs(val - r1) < 0.05) match1 = true;
-                match2 = true; // Effectively ignore the second matching requirement
+                match2 = true;
             } else {
                 if(isNaN(u1) || isNaN(u2)) { feedback('feedback-roots', false, "Enter both roots"); return; }
                 match1 = (Math.abs(u1 - r1) < 0.05 && Math.abs(u2 - r2) < 0.05);
@@ -570,7 +761,7 @@
                 showRoots = true;
                 resizeCanvas();
             } else {
-                feedback('feedback-roots', false, "Check your formula calculation");
+                feedback('feedback-roots', false, "Check your calculations");
             }
         }
 
@@ -653,6 +844,14 @@
                 if (Math.abs(r1 - r2) > 0.5) { 
                     ctx.fillText(r2.toFixed(2), p2.x - 10, p2.y - 10);
                 }
+            }
+            
+            // Draw Estimation Guesses
+            if (estimationActive || guesses.length > 0) {
+                guesses.forEach(g => {
+                    roughCanvas.line(g.screenX - 5, g.screenY - 5, g.screenX + 5, g.screenY + 5, { stroke: '#f59e0b', strokeWidth: 2 });
+                    roughCanvas.line(g.screenX + 5, g.screenY - 5, g.screenX - 5, g.screenY + 5, { stroke: '#f59e0b', strokeWidth: 2 });
+                });
             }
         }
 
