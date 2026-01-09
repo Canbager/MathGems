@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simultaneous Equations Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/roughjs@latest/bundled/rough.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Gochi+Hand&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .sketch-font { font-family: 'Gochi Hand', cursive; }
+        canvas { display: block; touch-action: none; background: #fff; }
+        .rough-area { filter: url(#rough-paper); }
+        
+        .sketch-input {
+            border: 2px solid #334155;
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.5rem;
+            font-family: 'Gochi Hand', cursive;
+            font-size: 1.25rem;
+            text-align: center;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .sketch-input:focus {
+            border-color: #4f46e5;
+            box-shadow: 2px 2px 0px 0px #4f46e5;
+        }
+        .sketch-btn {
+            background-color: #fff;
+            border: 2px solid #1e293b;
+            font-family: 'Gochi Hand', cursive;
+            font-weight: bold;
+            box-shadow: 2px 2px 0px 0px #1e293b;
+            transition: all 0.1s;
+        }
+        .sketch-btn:active {
+            box-shadow: none;
+            transform: translate(2px, 2px);
+        }
+        .step-box {
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .animate-pop {
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Custom Checkbox */
+        .sketch-checkbox {
+            appearance: none;
+            background-color: #fff;
+            margin: 0;
+            font: inherit;
+            color: currentColor;
+            width: 1.5em;
+            height: 1.5em;
+            border: 2px solid #1e293b;
+            border-radius: 0.25em;
+            display: grid;
+            place-content: center;
+            cursor: pointer;
+        }
+        .sketch-checkbox::before {
+            content: "";
+            width: 0.85em;
+            height: 0.85em;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em #4f46e5;
+            background-color: #4f46e5;
+            transform-origin: center;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+        .sketch-checkbox:checked::before {
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-4 md:p-8">
+    <svg style="position: absolute; width: 0; height: 0;">
+        <filter id="rough-paper">
+            <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" />
+        </filter>
+    </svg>
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        <!-- HEADER -->
+        <div class="bg-white border-4 border-slate-800 p-6 rounded-xl shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold sketch-font text-slate-800">Simultaneous Squad</h1>
+                <p class="text-slate-600 text-sm font-semibold">Master Elimination & Substitution</p>
+            </div>
+            
+            <div class="flex flex-wrap gap-4 items-center bg-slate-100 p-3 rounded-lg border-2 border-slate-800">
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="negatives" class="sketch-checkbox" checked>
+                    <span class="font-bold text-slate-700 text-sm">Negatives</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="decimals" class="sketch-checkbox">
+                    <span class="font-bold text-slate-700 text-sm">Decimals</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="fractions" class="sketch-checkbox">
+                    <span class="font-bold text-slate-700 text-sm">Fractions</span>
+                </label>
+                <button id="resetBtn" class="bg-white border-2 border-slate-800 px-4 py-1 rounded sketch-font font-bold hover:bg-yellow-50 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all">
+                    New Question
+                </button>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-12 gap-6">
+            <!-- LEFT COLUMN: Problem & Guided Solver -->
+            <div class="md:col-span-7 flex flex-col gap-6">
+                
+                <div class="bg-white border-4 border-slate-800 rounded-xl overflow-hidden shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] flex-1">
+                    <div class="p-6 md:p-8 rough-area relative">
+                        <!-- Decorative tape -->
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-32 h-8 bg-yellow-100/50 rotate-[-2deg] border border-yellow-200"></div>
+
+                        <div id="problem-text" class="text-slate-800 leading-relaxed text-xl sketch-font flex justify-center py-4 bg-slate-50 rounded-lg border-2 border-dashed border-slate-300 mb-6">
+                            Loading...
+                        </div>
+
+                        <!-- GUIDED SOLVER STEPS -->
+                        <div class="space-y-6">
+                            
+                            <!-- STEP 1: ELIMINATION -->
+                            <div id="box-elimination" class="step-box bg-white border-4 border-indigo-200 p-4 rounded-lg relative">
+                                <div class="absolute -top-3 left-4 bg-indigo-100 px-2 border border-indigo-300 rounded text-sm font-bold text-indigo-800 sketch-font">Step 1: Elimination</div>
+                                
+                                <div class="space-y-4 mt-2">
+                                    <div class="flex items-center gap-2 sketch-font text-slate-700">
+                                        Goal: Eliminate 
+                                        <select id="elim-var" class="sketch-input text-sm font-bold bg-white py-0 px-2 h-8">
+                                            <option value="y">y</option>
+                                            <option value="x">x</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- 1.1 Multipliers -->
+                                    <div class="flex flex-wrap items-center gap-2 text-sm md:text-base">
+                                        <span>Multiply Eq(1) by</span>
+                                        <input type="number" id="step1-m1" class="sketch-input w-16" placeholder="?">
+                                        <span>and Eq(2) by</span>
+                                        <input type="number" id="step1-m2" class="sketch-input w-16" placeholder="?">
+                                        <button onclick="checkStep1Multipliers()" class="sketch-btn px-3 py-1 text-sm bg-indigo-50 hover:bg-indigo-100 rounded">Apply</button>
+                                        <span id="feedback-1-1" class="text-lg"></span>
+                                    </div>
+
+                                    <!-- 1.2 Operations (Hidden initially) -->
+                                    <div id="step1-part2" class="hidden border-t-2 border-indigo-100 pt-3 space-y-3 animate-fade-in">
+                                        <div id="step1-new-eqs" class="text-center text-slate-600 bg-slate-50 p-2 rounded border border-slate-200">
+                                            <!-- JS will fill this -->
+                                        </div>
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span>Now,</span>
+                                            <select id="step1-op" class="sketch-input bg-white text-sm">
+                                                <option value="add">Add (+)</option>
+                                                <option value="sub">Subtract (-)</option>
+                                            </select>
+                                            <span>the equations.</span>
+                                            <button onclick="checkStep1Op()" class="sketch-btn px-3 py-1 text-sm bg-indigo-50 hover:bg-indigo-100 rounded">Check</button>
+                                            <span id="feedback-1-2" class="text-lg"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 1.3 Result (Hidden initially) -->
+                                    <div id="step1-part3" class="hidden border-t-2 border-indigo-100 pt-3 space-y-3">
+                                        <!-- User inputs the resulting equation -->
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="sketch-font">Result:</span>
+                                            <input type="number" id="step1-eq-coeff" class="sketch-input w-16" placeholder="?">
+                                            <span id="step1-eq-var" class="font-bold text-lg sketch-font">x</span>
+                                            <span class="font-bold">=</span>
+                                            <input type="number" id="step1-eq-const" class="sketch-input w-16" placeholder="?">
+                                            <button onclick="checkStep1EquationInput()" class="sketch-btn px-3 py-1 text-sm bg-indigo-50 hover:bg-indigo-100 rounded">Check Eq</button>
+                                            <span id="feedback-1-eq" class="text-lg"></span>
+                                        </div>
+
+                                        <!-- Final Step 1 solve (Hidden until eq correct) -->
+                                        <div id="step1-solve-part" class="hidden flex flex-wrap items-center gap-2 animate-fade-in">
+                                            <span id="step1-res-var" class="sketch-font font-bold text-xl">So, x = </span>
+                                            <input type="number" id="step1-res-input" step="0.01" class="sketch-input w-24">
+                                            <button onclick="checkStep1Result()" class="sketch-btn px-3 py-1 text-sm bg-indigo-50 hover:bg-indigo-100 rounded">Final Check</button>
+                                            <span id="feedback-1-3" class="text-lg"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- STEP 2: SUBSTITUTION -->
+                            <div id="box-substitution" class="step-box opacity-50 pointer-events-none bg-slate-50 border-2 border-dashed border-slate-300 p-4 rounded-lg relative">
+                                <div class="absolute -top-3 left-4 bg-slate-200 px-2 border border-slate-300 rounded text-sm font-bold text-slate-500 sketch-font">Step 2: Substitution</div>
+                                
+                                <div class="mt-2 space-y-3">
+                                    <div class="sketch-font text-slate-700 flex flex-wrap items-center gap-2">
+                                        Substitute <span id="sub-known-var" class="font-bold">x=...</span> into 
+                                        <select id="sub-eq" onchange="updateSubHint()" class="sketch-input text-sm font-bold bg-white py-0 px-2 h-8">
+                                            <option value="1">Eq(1)</option>
+                                            <option value="2">Eq(2)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- 2.1 Evaluate Term -->
+                                    <div id="sub-eval-container" class="hidden p-3 bg-amber-50 border border-amber-200 rounded animate-fade-in">
+                                         <div id="sub-eval-prompt" class="mb-2 text-sm text-amber-900 font-mono text-center"></div>
+                                         <div class="flex items-center justify-center gap-2">
+                                            <span class="sketch-font text-sm">Value:</span>
+                                            <input type="number" id="sub-eval-input" class="sketch-input w-20">
+                                            <button onclick="checkSubEval()" class="sketch-btn px-3 py-1 text-sm bg-white hover:bg-slate-50 rounded">Check</button>
+                                            <span id="feedback-sub-eval" class="text-lg"></span>
+                                         </div>
+                                    </div>
+
+                                    <!-- 2.2 Solve Final -->
+                                    <div id="sub-solve-container" class="hidden flex flex-wrap items-center gap-2 animate-fade-in">
+                                        <div class="w-full text-center text-sm font-mono bg-slate-100 p-1 rounded mb-2" id="sub-final-eq-display"></div>
+                                        <span id="step2-res-var" class="sketch-font font-bold text-xl">y = </span>
+                                        <input type="number" id="step2-res-input" step="0.01" class="sketch-input w-24">
+                                        <button onclick="checkStep2Result()" class="sketch-btn px-3 py-1 text-sm bg-white hover:bg-slate-50 rounded">Solve</button>
+                                        <span id="feedback-2" class="text-lg"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- STEP 3: VERIFICATION -->
+                            <div id="box-verification" class="step-box opacity-50 pointer-events-none bg-slate-50 border-2 border-dashed border-slate-300 p-4 rounded-lg relative">
+                                <div class="absolute -top-3 left-4 bg-slate-200 px-2 border border-slate-300 rounded text-sm font-bold text-slate-500 sketch-font">Step 3: Check</div>
+                                
+                                <div class="mt-2 space-y-3">
+                                    <p class="sketch-font text-slate-700">Test both values in <span id="check-eq-name" class="font-bold">the other equation</span>.</p>
+                                    <div id="check-eq-display" class="text-sm font-mono text-center bg-white p-2 border border-slate-200 rounded">
+                                        <!-- JS fills this -->
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span>Does the LHS equal</span>
+                                        <span id="check-target" class="font-bold">?</span>
+                                        <div class="flex gap-2 ml-2">
+                                            <button onclick="checkVerification(true)" class="sketch-btn px-4 py-1 bg-green-50 hover:bg-green-100 rounded text-green-700">Yes</button>
+                                            <button onclick="checkVerification(false)" class="sketch-btn px-4 py-1 bg-red-50 hover:bg-red-100 rounded text-red-700">No</button>
+                                        </div>
+                                        <span id="feedback-3" class="text-lg"></span>
+                                    </div>
+                                </div>
+
+                                <!-- SUCCESS BANNER -->
+                                <div id="success-banner" class="hidden mt-4 bg-yellow-100 border-4 border-yellow-400 p-4 rounded-lg shadow-[4px_4px_0px_0px_rgba(234,179,8,1)] animate-pop text-center">
+                                    <h3 class="text-2xl font-bold sketch-font text-yellow-800">🎉 SUCCESS! 🎉</h3>
+                                    <p class="text-yellow-900 font-semibold mt-1">You've cracked the code!</p>
+                                    <div class="mt-2 bg-white border-2 border-yellow-800 p-2 rounded inline-block">
+                                        <span class="text-indigo-600 font-bold">👉 Look at the GRAPH to see your intersection!</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SDG BOX -->
+                <div class="bg-emerald-50 border-4 border-slate-800 rounded-xl p-4 flex items-center gap-4 shadow-[4px_4px_0px_0px_rgba(30,41,59,1)]">
+                    <div class="shrink-0 w-14 h-14 bg-emerald-600 rounded flex items-center justify-center text-white font-bold text-2xl shadow-sm">4</div>
+                    <div>
+                        <h3 class="font-bold text-emerald-900 text-sm uppercase">Quality Education</h3>
+                        <p class="text-xs text-emerald-800 leading-tight">Structured problem-solving builds the logical frameworks needed for advanced mathematics.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: Visualisation -->
+            <div class="md:col-span-5 space-y-6">
+                <!-- GRAPH CANVAS -->
+                <div class="bg-white border-4 border-slate-800 rounded-xl overflow-hidden relative shadow-[8px_8px_0px_0px_rgba(30,41,59,1)]">
+                    <div class="absolute top-2 left-2 z-10 bg-white/90 px-2 py-1 border border-slate-800 rounded text-xs font-bold sketch-font">
+                        Graph
+                    </div>
+                    <div id="canvas-wrapper" class="w-full aspect-square bg-white cursor-crosshair relative">
+                        <canvas id="geoCanvas"></canvas>
+                    </div>
+                    <div id="legend-graph" class="p-3 border-t-4 border-slate-800 bg-slate-50 text-center">
+                        <div class="flex justify-center gap-6 text-sm font-bold sketch-font">
+                            <div class="flex items-center gap-2">
+                                <span class="block w-4 h-4 bg-red-500 rounded-full border border-black"></span> Eq 1
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="block w-4 h-4 bg-blue-500 rounded-full border border-black"></span> Eq 2
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="block w-3 h-3 bg-green-500 rounded-full border border-black"></span> Solution
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ALGEBRA TILES CANVAS -->
+                <div class="bg-white border-4 border-slate-800 rounded-xl overflow-hidden relative shadow-[8px_8px_0px_0px_rgba(30,41,59,1)]">
+                    <div class="absolute top-2 left-2 z-10 bg-white/90 px-2 py-1 border border-slate-800 rounded text-xs font-bold sketch-font">
+                        Algebra Tiles
+                    </div>
+                    <div id="tile-wrapper" class="w-full aspect-[4/3] bg-white relative">
+                        <canvas id="tileCanvas"></canvas>
+                    </div>
+                    <div id="legend-tiles" class="p-3 border-t-4 border-slate-800 bg-slate-50 text-center">
+                        <div class="flex justify-center flex-wrap gap-4 text-xs font-bold sketch-font">
+                            <div class="flex items-center gap-1"><span class="w-4 h-3 bg-green-500 border border-black"></span> +x</div>
+                            <div class="flex items-center gap-1"><span class="w-4 h-3 bg-red-500 border border-black"></span> -x</div>
+                            <div class="flex items-center gap-1"><span class="w-3 h-4 bg-blue-400 border border-black"></span> +y</div>
+                            <div class="flex items-center gap-1"><span class="w-3 h-4 bg-yellow-400 border border-black"></span> -y</div>
+                            <div class="flex items-center gap-1"><span class="w-3 h-3 bg-slate-200 border border-black"></span> 1</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tip Box -->
+                <div id="tip-box" class="bg-amber-50 border-4 border-slate-800 rounded-xl p-6 shadow-[4px_4px_0px_0px_rgba(30,41,59,1)] relative overflow-hidden transition-all">
+                    <div class="absolute -right-4 -top-4 w-16 h-16 bg-amber-200 rounded-full opacity-50"></div>
+                    <h4 class="font-bold text-amber-900 sketch-font text-lg mb-2">Teacher's Tip:</h4>
+                    <p id="tip-text" class="text-sm text-amber-800 italic">
+                        "Look at the coefficients. Find a number they both go into (the LCM) to eliminate one variable!"
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONSTANTS & STATE ---
+        const canvas = document.getElementById('geoCanvas');
+        const tileCanvas = document.getElementById('tileCanvas');
+        const ctx = canvas.getContext('2d');
+        const tileCtx = tileCanvas.getContext('2d');
+        const roughCanvas = rough.canvas(canvas);
+        const roughTileCanvas = rough.canvas(tileCanvas);
+
+        let currentProblem = null;
+        let scale = 20; 
+        let origin = { x: 0, y: 0 };
+        
+        // Interactive State
+        let stepState = {
+            m1: 0, m2: 0,
+            elimVar: 'y', // 'x' or 'y'
+            subEq: 1, // 1 or 2
+            newEq1: null, newEq2: null, // Scaled equations
+            resultEq: null, // Equation after add/sub
+            foundVal: null, // Value found in Step 1
+            finalVal: null,  // Value found in Step 2
+            subTargetVal: null // The value user must calc in Step 2
+        };
+
+        // --- UTILITIES ---
+        const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+        
+        class Fraction {
+            constructor(n, d) {
+                if (d < 0) { n = -n; d = -d; }
+                const divisor = Math.abs(gcd(n, d));
+                this.n = n / divisor;
+                this.d = d / divisor;
+            }
+            toTex() {
+                if (this.d === 1) return this.n.toString();
+                if (this.n === 0) return "0";
+                return `\\frac{${this.n}}{${this.d}}`;
+            }
+            val() { return this.n / this.d; }
+        }
+
+        // --- PROBLEM GENERATION ---
+        function generateProblem() {
+            const useNegatives = document.getElementById('negatives').checked;
+            const useDecimals = document.getElementById('decimals').checked;
+            const useFractions = document.getElementById('fractions').checked;
+
+            let x, y;
+            if (!useDecimals && !useFractions) {
+                x = rnd(useNegatives ? -5 : 1, 5); 
+                y = rnd(useNegatives ? -5 : 1, 5);
+            } else {
+                const denom = rnd(1, 2) === 1 ? 2 : 4;
+                x = rnd(useNegatives ? -8 : 1, 8) / denom;
+                y = rnd(useNegatives ? -8 : 1, 8) / denom;
+            }
+
+            // Determine Coefficients
+            let a1, b1, c1, a2, b2, c2;
+            const makeCoeff = () => {
+                let v = 0;
+                let attempts = 0;
+                // [FIX] Loop to ensure non-zero coefficients
+                do {
+                    if (useFractions && Math.random() > 0.6) {
+                        let d = rnd(2, 5); let n = rnd(1, 5);
+                        return { type: 'frac', val: n/d, obj: new Fraction(n, d) };
+                    } else if (useDecimals && Math.random() > 0.6) {
+                        v = rnd(1, 50) / 10;
+                        if (useNegatives && Math.random() > 0.5) v *= -1;
+                        if (v !== 0) return { type: 'dec', val: v };
+                    } else {
+                        v = rnd(1, 5); 
+                        if (useNegatives && Math.random() > 0.5) v *= -1;
+                        if (v !== 0) return { type: 'int', val: v };
+                    }
+                    attempts++;
+                } while(v === 0 && attempts < 10);
+                return { type: 'int', val: 1 }; // Fallback
+            };
+
+            let attempts = 0;
+            do {
+                let cA = makeCoeff(); a1 = cA.val; let dispA1 = cA;
+                let cB = makeCoeff(); b1 = cB.val; let dispB1 = cB;
+                let cD = makeCoeff(); a2 = cD.val; let dispA2 = cD;
+                let cE = makeCoeff(); b2 = cE.val; let dispB2 = cE;
+
+                c1 = a1 * x + b1 * y;
+                c2 = a2 * x + b2 * y;
+
+                currentProblem = {
+                    x, y,
+                    eq1: { a: a1, b: b1, c: c1, aDisp: dispA1, bDisp: dispB1 },
+                    eq2: { a: a2, b: b2, c: c2, aDisp: dispA2, bDisp: dispB2 }
+                };
+                attempts++;
+            } while ((Math.abs(a1*b2 - a2*b1) < 0.001) && attempts < 10);
+
+            renderProblem();
+            draw();
+            resetInteractiveUI();
+        }
+
+        // --- UI HELPERS ---
+        function formatCoeff(valObj, isFirst) {
+            let val = valObj.val;
+            let str = "";
+            if (valObj.type === 'frac') {
+                if (val > 0 && !isFirst) str += "+ ";
+                if (val < 0) str += "- ";
+                str += valObj.obj.toTex();
+            } else {
+                if (val >= 0 && !isFirst) str += "+ ";
+                if (val < 0) str += "- "; 
+                let absVal = Math.abs(val);
+                if (Math.abs(absVal - 1) < 0.0001) str += ""; 
+                else str += absVal;
+            }
+            return str;
+        }
+
+        function formatConstant(val) {
+            return Number.isInteger(val) ? val : val.toFixed(2).replace(/\.00$/, '');
+        }
+
+        function buildEqString(eq) {
+            let s = "";
+            let xStr = formatCoeff(eq.aDisp, true);
+            if (Math.abs(Math.abs(eq.a) - 1) < 0.001) s += (eq.a < 0 ? "-" : "") + "x";
+            else s += xStr + "x";
+
+            let yStr = formatCoeff(eq.bDisp, false);
+            if (Math.abs(Math.abs(eq.b) - 1) < 0.001) s += (eq.b < 0 ? " - " : " + ") + "y";
+            else s += " " + yStr + "y"; 
+            
+            s += " = " + formatConstant(eq.c);
+            return s;
+        }
+
+        function renderProblem() {
+            const p = currentProblem;
+            const tex = `\\begin{cases} ${buildEqString(p.eq1)} \\quad &\\text{(1)} \\\\ ${buildEqString(p.eq2)} \\quad &\\text{(2)} \\end{cases}`;
+            katex.render(tex, document.getElementById('problem-text'), { throwOnError: false, displayMode: true });
+        }
+
+        // --- STEP LOGIC ---
+
+        function resetInteractiveUI() {
+            stepState = { m1: 0, m2: 0, elimVar: 'y', subEq: 1, newEq1: null, newEq2: null, resultEq: null, foundVal: null, finalVal: null, subTargetVal: null };
+            
+            document.getElementById('elim-var').value = 'y';
+            document.getElementById('elim-var').disabled = false;
+            document.getElementById('sub-eq').value = '1';
+            
+            const resetBox = (id, active) => {
+                const el = document.getElementById(id);
+                if (active) {
+                    el.classList.remove('opacity-50', 'pointer-events-none', 'bg-slate-50', 'border-dashed', 'border-slate-300');
+                    el.classList.add('bg-white', 'border-4', 'border-indigo-200');
+                } else {
+                    el.classList.add('opacity-50', 'pointer-events-none', 'bg-slate-50', 'border-dashed', 'border-slate-300');
+                    el.classList.remove('bg-white', 'border-4', 'border-indigo-200');
+                }
+            };
+            
+            document.querySelectorAll('input[type=number]').forEach(i => i.value = '');
+            document.querySelectorAll('[id^=feedback]').forEach(s => s.innerHTML = '');
+            document.getElementById('sub-eval-container').classList.add('hidden');
+            document.getElementById('sub-solve-container').classList.add('hidden');
+            document.getElementById('success-banner').classList.add('hidden');
+
+            resetBox('box-elimination', true);
+            document.getElementById('step1-part2').classList.add('hidden');
+            document.getElementById('step1-part3').classList.add('hidden');
+            document.getElementById('step1-solve-part').classList.add('hidden');
+            resetBox('box-substitution', false);
+            resetBox('box-verification', false);
+
+            document.getElementById('tip-text').innerText = "Follow the steps to solve using algebraic methods!";
+        }
+
+        function feedback(id, isCorrect, msg = "") {
+            const el = document.getElementById(id);
+            if (isCorrect) {
+                el.innerHTML = `<span class="text-emerald-600 font-bold">✓</span>`;
+                return true;
+            } else {
+                el.innerHTML = `<span class="text-red-500 font-bold">✗ ${msg}</span>`;
+                return false;
+            }
+        }
+
+        function checkStep1Multipliers() {
+            const m1 = parseFloat(document.getElementById('step1-m1').value);
+            const m2 = parseFloat(document.getElementById('step1-m2').value);
+            const elimVar = document.getElementById('elim-var').value;
+            stepState.elimVar = elimVar;
+
+            if (!m1 || !m2) return feedback('feedback-1-1', false, "Enter values");
+
+            let coeff1 = (elimVar === 'y') ? currentProblem.eq1.b : currentProblem.eq1.a;
+            let coeff2 = (elimVar === 'y') ? currentProblem.eq2.b : currentProblem.eq2.a;
+
+            const term1 = Math.abs(m1 * coeff1);
+            const term2 = Math.abs(m2 * coeff2);
+
+            if (Math.abs(term1 - term2) < 0.01 && term1 > 0.001) {
+                feedback('feedback-1-1', true);
+                document.getElementById('elim-var').disabled = true;
+                stepState.m1 = m1;
+                stepState.m2 = m2;
+                
+                stepState.newEq1 = {
+                    a: currentProblem.eq1.a * m1,
+                    b: currentProblem.eq1.b * m1,
+                    c: currentProblem.eq1.c * m1
+                };
+                stepState.newEq2 = {
+                    a: currentProblem.eq2.a * m2,
+                    b: currentProblem.eq2.b * m2,
+                    c: currentProblem.eq2.c * m2
+                };
+                
+                const eq1Str = `${formatConstant(stepState.newEq1.a)}x ${stepState.newEq1.b < 0 ? '-' : '+'} ${Math.abs(formatConstant(stepState.newEq1.b))}y = ${formatConstant(stepState.newEq1.c)}`;
+                const eq2Str = `${formatConstant(stepState.newEq2.a)}x ${stepState.newEq2.b < 0 ? '-' : '+'} ${Math.abs(formatConstant(stepState.newEq2.b))}y = ${formatConstant(stepState.newEq2.c)}`;
+                
+                document.getElementById('step1-new-eqs').innerHTML = `<div class="font-bold">New Equations:</div><div>$$ ${eq1Str} $$</div><div>$$ ${eq2Str} $$</div>`;
+                renderMathInElement(document.getElementById('step1-new-eqs'));
+                
+                document.getElementById('step1-part2').classList.remove('hidden');
+                draw();
+            } else {
+                feedback('feedback-1-1', false, `${elimVar} terms won't match!`);
+            }
+        }
+
+        function checkStep1Op() {
+            const op = document.getElementById('step1-op').value;
+            const v1 = (stepState.elimVar === 'y') ? stepState.newEq1.b : stepState.newEq1.a;
+            const v2 = (stepState.elimVar === 'y') ? stepState.newEq2.b : stepState.newEq2.a;
+
+            const sameSign = (v1 > 0 && v2 > 0) || (v1 < 0 && v2 < 0);
+            const correctOp = sameSign ? 'sub' : 'add';
+
+            if (op === correctOp) {
+                feedback('feedback-1-2', true);
+                
+                let rA, rB, rC;
+                if (op === 'add') {
+                    rA = stepState.newEq1.a + stepState.newEq2.a;
+                    rB = stepState.newEq1.b + stepState.newEq2.b;
+                    rC = stepState.newEq1.c + stepState.newEq2.c;
+                } else {
+                    rA = stepState.newEq1.a - stepState.newEq2.a;
+                    rB = stepState.newEq1.b - stepState.newEq2.b;
+                    rC = stepState.newEq1.c - stepState.newEq2.c;
+                }
+
+                stepState.resultEq = { a: rA, b: rB, c: rC };
+                
+                // Show result input section
+                const resVar = (stepState.elimVar === 'y') ? 'x' : 'y';
+                document.getElementById('step1-eq-var').innerText = resVar;
+                document.getElementById('step1-part3').classList.remove('hidden');
+                document.getElementById('tip-text').innerText = `Calculate the resulting equation after ${op === 'add' ? 'adding' : 'subtracting'}.`;
+
+                draw();
+            } else {
+                feedback('feedback-1-2', false, `That won't eliminate ${stepState.elimVar}.`);
+            }
+        }
+
+        function checkStep1EquationInput() {
+            const coeff = parseFloat(document.getElementById('step1-eq-coeff').value);
+            const constant = parseFloat(document.getElementById('step1-eq-const').value);
+            
+            // Expected Result
+            const correctCoeff = (stepState.elimVar === 'y') ? stepState.resultEq.a : stepState.resultEq.b;
+            const correctConst = stepState.resultEq.c;
+
+            // [FIX] Checking both original subtraction (Top - Bottom) and reverse subtraction (Bottom - Top)
+            // Case 1: Standard
+            const check1 = Math.abs(coeff - correctCoeff) < 0.05 && Math.abs(constant - correctConst) < 0.05;
+            // Case 2: Inverted (multiplied by -1)
+            const check2 = Math.abs(coeff - (-correctCoeff)) < 0.05 && Math.abs(constant - (-correctConst)) < 0.05;
+
+            if (check1 || check2) {
+                feedback('feedback-1-eq', true);
+                
+                // Show solve part
+                const resVar = (stepState.elimVar === 'y') ? 'x' : 'y';
+                document.getElementById('step1-res-var').innerText = `So, ${resVar} = `;
+                document.getElementById('step1-solve-part').classList.remove('hidden');
+            } else {
+                feedback('feedback-1-eq', false, "Check addition/subtraction");
+            }
+        }
+
+        function checkStep1Result() {
+            const val = parseFloat(document.getElementById('step1-res-input').value);
+            const correctVal = (stepState.elimVar === 'y') ? currentProblem.x : currentProblem.y;
+            
+            if (Math.abs(val - correctVal) < 0.05) {
+                feedback('feedback-1-3', true);
+                stepState.foundVal = val;
+                
+                const s2 = document.getElementById('box-substitution');
+                s2.classList.remove('opacity-50', 'pointer-events-none', 'bg-slate-50', 'border-dashed', 'border-slate-300');
+                s2.classList.add('bg-white', 'border-4', 'border-indigo-200');
+                
+                const foundVarName = (stepState.elimVar === 'y') ? 'x' : 'y';
+                
+                document.getElementById('sub-known-var').innerText = `${foundVarName} = ${val}`;
+                
+                // Reset substitution UI
+                document.getElementById('sub-eval-container').classList.add('hidden');
+                document.getElementById('sub-solve-container').classList.add('hidden');
+                document.getElementById('sub-eval-input').value = '';
+                document.getElementById('feedback-sub-eval').innerHTML = '';
+                updateSubHint(); 
+                
+                drawGraph({x: (foundVarName === 'x' ? val : null), y: (foundVarName === 'y' ? val : null)});
+            } else {
+                feedback('feedback-1-3', false, "Check division");
+            }
+        }
+
+        function updateSubHint() {
+            const eqIdx = document.getElementById('sub-eq').value;
+            const eq = (eqIdx === '1') ? currentProblem.eq1 : currentProblem.eq2;
+            const foundVar = (stepState.elimVar === 'y') ? 'x' : 'y';
+            const foundVal = stepState.foundVal;
+            
+            if (foundVal === null) return;
+
+            let termTex = "";
+            let targetVal = 0;
+            
+            if (foundVar === 'x') {
+                // Term is a*x
+                termTex = `${formatConstant(eq.a)}(${formatConstant(foundVal)})`;
+                targetVal = eq.a * foundVal;
+            } else {
+                // Term is b*y
+                termTex = `${formatConstant(eq.b)}(${formatConstant(foundVal)})`;
+                targetVal = eq.b * foundVal;
+            }
+            
+            stepState.subTargetVal = targetVal;
+            
+            document.getElementById('sub-eval-prompt').innerHTML = `Evaluate the term: $$ ${termTex} = ? $$`;
+            renderMathInElement(document.getElementById('sub-eval-prompt'));
+            
+            document.getElementById('sub-eval-container').classList.remove('hidden');
+            document.getElementById('sub-solve-container').classList.add('hidden'); // Hide next step until checked
+        }
+
+        function checkSubEval() {
+            const val = parseFloat(document.getElementById('sub-eval-input').value);
+            if (Math.abs(val - stepState.subTargetVal) < 0.05) {
+                feedback('feedback-sub-eval', true);
+                
+                // Show final equation and solve input
+                const eqIdx = document.getElementById('sub-eq').value;
+                const eq = (eqIdx === '1') ? currentProblem.eq1 : currentProblem.eq2;
+                const foundVar = (stepState.elimVar === 'y') ? 'x' : 'y';
+                const solveVarName = (foundVar === 'x') ? 'y' : 'x';
+                
+                // Construct simplified equation string: e.g. "6 + 4y = 10"
+                let simpStr = "";
+                if (foundVar === 'x') {
+                    // val + by = c
+                    simpStr = `${formatConstant(val)} ${eq.b < 0 ? '-' : '+'} ${Math.abs(formatConstant(eq.b))}y = ${formatConstant(eq.c)}`;
+                } else {
+                    // ax + val = c
+                    simpStr = `${formatConstant(eq.a)}x ${val < 0 ? '-' : '+'} ${Math.abs(formatConstant(val))} = ${formatConstant(eq.c)}`;
+                }
+                
+                document.getElementById('sub-final-eq-display').innerHTML = `$$ ${simpStr} $$`;
+                renderMathInElement(document.getElementById('sub-final-eq-display'));
+                
+                document.getElementById('step2-res-var').innerText = `${solveVarName} = `;
+                document.getElementById('sub-solve-container').classList.remove('hidden');
+
+            } else {
+                feedback('feedback-sub-eval', false, "Check math");
+            }
+        }
+
+        function checkStep2Result() {
+            const val = parseFloat(document.getElementById('step2-res-input').value);
+            const correctVal = (stepState.elimVar === 'y') ? currentProblem.y : currentProblem.x;
+            
+            if (Math.abs(val - correctVal) < 0.05) {
+                feedback('feedback-2', true);
+                stepState.finalVal = val;
+                stepState.subEq = parseInt(document.getElementById('sub-eq').value);
+
+                const s3 = document.getElementById('box-verification');
+                s3.classList.remove('opacity-50', 'pointer-events-none', 'bg-slate-50', 'border-dashed', 'border-slate-300');
+                s3.classList.add('bg-white', 'border-4', 'border-indigo-200');
+
+                const checkEqIdx = (stepState.subEq === 1) ? 2 : 1;
+                const checkEq = (checkEqIdx === 1) ? currentProblem.eq1 : currentProblem.eq2;
+                
+                document.getElementById('check-eq-name').innerText = `Eq(${checkEqIdx})`;
+                
+                const xVal = (stepState.elimVar === 'y') ? stepState.foundVal : stepState.finalVal;
+                const yVal = (stepState.elimVar === 'y') ? stepState.finalVal : stepState.foundVal;
+
+                const lhsStr = `${formatConstant(checkEq.a)}(${xVal}) + ${formatConstant(checkEq.b)}(${yVal})`;
+                document.getElementById('check-eq-display').innerText = `${lhsStr} = ?`;
+                document.getElementById('check-target').innerText = formatConstant(checkEq.c);
+                
+                drawGraph({x: xVal, y: yVal});
+            } else {
+                feedback('feedback-2', false, "Double check substitution");
+            }
+        }
+
+        function checkVerification(userSaysYes) {
+            if (userSaysYes) {
+                feedback('feedback-3', true, "Great work!");
+                const x = (stepState.elimVar === 'y') ? stepState.foundVal : stepState.finalVal;
+                const y = (stepState.elimVar === 'y') ? stepState.finalVal : stepState.foundVal;
+                const pt = { x: canvas.width/2 + x*scale, y: canvas.height/2 - y*scale };
+                roughCanvas.circle(pt.x, pt.y, 30, { stroke: '#f59e0b', strokeWidth: 2, roughness: 3 });
+                
+                // Show Success Banner
+                document.getElementById('success-banner').classList.remove('hidden');
+                
+            } else {
+                feedback('feedback-3', false, "Trust your math!");
+            }
+        }
+
+
+        // --- VISUALISATION ---
+        function resizeCanvases() {
+            const wrapGraph = document.getElementById('canvas-wrapper');
+            canvas.width = wrapGraph.clientWidth;
+            canvas.height = wrapGraph.clientHeight;
+            
+            const wrapTile = document.getElementById('tile-wrapper');
+            tileCanvas.width = wrapTile.clientWidth;
+            tileCanvas.height = wrapTile.clientHeight;
+
+            draw();
+        }
+        
+        function draw() {
+            let pt = null;
+            if (stepState.foundVal !== null) {
+                if (stepState.finalVal !== null) {
+                    const x = (stepState.elimVar === 'y') ? stepState.foundVal : stepState.finalVal;
+                    const y = (stepState.elimVar === 'y') ? stepState.finalVal : stepState.foundVal;
+                    pt = {x, y};
+                } else {
+                     const x = (stepState.elimVar === 'y') ? stepState.foundVal : null;
+                     const y = (stepState.elimVar === 'y') ? null : stepState.foundVal;
+                     pt = {x, y};
+                }
+            }
+            drawGraph(pt);
+            drawTiles();
+        }
+
+        function drawGraph(userPoint = null) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const w = canvas.width;
+            const h = canvas.height;
+            origin = { x: w/2, y: h/2 };
+            
+            let maxVal = 10;
+            if (currentProblem) {
+                maxVal = Math.max(Math.abs(currentProblem.x), Math.abs(currentProblem.y), 10);
+            }
+            scale = (w / 2) / (maxVal + 2); 
+
+            const toScreen = (x, y) => ({ x: origin.x + x * scale, y: origin.y - y * scale });
+
+            // Grid
+            ctx.beginPath();
+            ctx.strokeStyle = "#e2e8f0";
+            ctx.lineWidth = 1;
+            const range = Math.ceil(w/2/scale);
+            for(let i = -range; i <= range; i++) {
+                let p1 = toScreen(i, -range); let p2 = toScreen(i, range);
+                ctx.moveTo(p1.x, 0); ctx.lineTo(p1.x, h);
+                let p3 = toScreen(-range, i); let p4 = toScreen(range, i);
+                ctx.moveTo(0, p3.y); ctx.lineTo(w, p3.y);
+            }
+            ctx.stroke();
+
+            // Axes
+            roughCanvas.line(0, origin.y, w, origin.y, { stroke: '#1e293b', strokeWidth: 2 });
+            roughCanvas.line(origin.x, 0, origin.x, h, { stroke: '#1e293b', strokeWidth: 2 });
+
+            const drawEqLine = (eq, color) => {
+                const getY = (x) => (eq.c - eq.a * x) / eq.b;
+                let p1, p2;
+                if (Math.abs(eq.b) < 0.001) {
+                    let xVal = eq.c / eq.a;
+                    p1 = toScreen(xVal, -range*1.5); p2 = toScreen(xVal, range*1.5);
+                } else {
+                    p1 = toScreen(-range*1.5, getY(-range*1.5));
+                    p2 = toScreen(range*1.5, getY(range*1.5));
+                }
+                roughCanvas.line(p1.x, p1.y, p2.x, p2.y, { stroke: color, strokeWidth: 3, roughness: 1.5, bowing: 1.5 });
+            };
+
+            if (currentProblem) {
+                drawEqLine(currentProblem.eq1, '#ef4444');
+                drawEqLine(currentProblem.eq2, '#3b82f6');
+            }
+
+            if (userPoint) {
+                if (userPoint.x !== null && userPoint.y === null) {
+                   const xPos = toScreen(userPoint.x, 0).x;
+                   roughCanvas.line(xPos, 0, xPos, h, { stroke: '#10b981', strokeWidth: 2, strokeStyle: 'dashed' });
+                }
+                else if (userPoint.x === null && userPoint.y !== null) {
+                   const yPos = toScreen(0, userPoint.y).y;
+                   roughCanvas.line(0, yPos, w, yPos, { stroke: '#10b981', strokeWidth: 2, strokeStyle: 'dashed' });
+                }
+                else if (userPoint.x !== null && userPoint.y !== null) {
+                    const up = toScreen(userPoint.x, userPoint.y);
+                    roughCanvas.circle(up.x, up.y, 10, { fill: '#10b981', fillStyle: 'solid', stroke: '#064e3b' });
+                }
+            }
+        }
+        
+        function drawTiles() {
+            tileCtx.clearRect(0, 0, tileCanvas.width, tileCanvas.height);
+            if (!currentProblem) return;
+
+            let eqsToShow = [];
+            
+            if (stepState.resultEq) {
+                eqsToShow.push({ eq: stepState.newEq1, label: 'Eq 3', checkCancel: true });
+                eqsToShow.push({ eq: stepState.newEq2, label: 'Eq 4', checkCancel: true });
+                eqsToShow.push({ eq: stepState.resultEq, label: 'Result', highlight: true });
+            } else if (stepState.newEq1) {
+                eqsToShow.push({ eq: stepState.newEq1, label: 'Eq 3' });
+                eqsToShow.push({ eq: stepState.newEq2, label: 'Eq 4' });
+            } else {
+                eqsToShow.push({ eq: currentProblem.eq1, label: 'Eq 1' });
+                eqsToShow.push({ eq: currentProblem.eq2, label: 'Eq 2' });
+            }
+
+            const totalRows = eqsToShow.length;
+            const rowHeight = tileCanvas.height / (totalRows + 0.5);
+            let yPos = rowHeight * 0.5;
+
+            eqsToShow.forEach((item, idx) => {
+                const bounds = drawEquationRow(item.eq, yPos, item.label, item.highlight);
+                
+                // Draw Cancellation Logic (Red Cross)
+                if (item.checkCancel && stepState.resultEq) {
+                    // Which variable was eliminated?
+                    if (stepState.elimVar === 'x') {
+                        drawCancellationCross(bounds.xBounds);
+                    } else {
+                        drawCancellationCross(bounds.yBounds);
+                    }
+                }
+                
+                yPos += rowHeight;
+            });
+        }
+        
+        function drawCancellationCross(bounds) {
+             if(bounds) {
+                roughTileCanvas.line(bounds.start, bounds.top, bounds.end, bounds.bottom, { stroke: '#ef4444', strokeWidth: 3 });
+                roughTileCanvas.line(bounds.start, bounds.bottom, bounds.end, bounds.top, { stroke: '#ef4444', strokeWidth: 3 });
+             }
+        }
+
+        function drawEquationRow(eq, y, label, highlight = false) {
+            const w = tileCanvas.width;
+            
+            const a = eq.a;
+            const b = eq.b;
+            const c = eq.c;
+            
+            // Logic to calculate width usage
+            // Grouping: If count > 3 OR is fractional, draw single block
+            const isInt = (n) => Math.abs(Math.round(n) - n) < 0.01;
+            const isGroupX = Math.abs(a) > 3 || !isInt(a);
+            const isGroupY = Math.abs(b) > 3 || !isInt(b);
+            const isGroupC = Math.abs(c) > 3 || !isInt(c);
+
+            const unitPx = 25; 
+            const xSectionW = isGroupX ? unitPx * 3 : Math.abs(a) * unitPx * 2.2;
+            const ySectionW = isGroupY ? unitPx * 3 : Math.abs(b) * unitPx * 1.2;
+            const cSectionW = isGroupC ? unitPx * 3 : Math.abs(c) * unitPx * 1.2;
+            
+            // Layout Calculation
+            let xPos = 50; 
+            
+            tileCtx.font = "bold 16px Gochi Hand";
+            tileCtx.fillStyle = "#334155";
+            tileCtx.fillText(label, 5, y + 5);
+            
+            if (highlight) {
+                roughTileCanvas.rectangle(2, y - unitPx - 10, w - 4, unitPx * 3, { stroke: '#f59e0b', strokeWidth: 1, strokeStyle: 'dashed' });
+            }
+            
+            // Capture Bounds
+            let xBounds = { start: xPos, end: xPos + xSectionW, top: y - unitPx - 5, bottom: y + unitPx + 5 };
+            
+            // Draw X
+            const xColor = (a > 0) ? '#22c55e' : '#ef4444';
+            if (isGroupX) {
+                drawGroupBlock(xPos, y, unitPx, formatConstant(a) + 'x', xColor);
+                xPos += unitPx * 3;
+            } else {
+                for(let i=0; i<Math.abs(a); i++) {
+                    roughTileCanvas.rectangle(xPos, y - unitPx/2, unitPx*2, unitPx, { fill: xColor, fillStyle: 'solid', strokeWidth: 1 });
+                    xPos += unitPx*2.2;
+                }
+            }
+            if(Math.abs(a) < 0.001) xBounds = null;
+            
+            xPos += 10;
+            let yBounds = { start: xPos, end: xPos + ySectionW, top: y - unitPx - 5, bottom: y + unitPx + 5 };
+            
+            // Draw Y
+            const yColor = (b > 0) ? '#60a5fa' : '#facc15';
+            if (isGroupY) {
+                drawGroupBlock(xPos, y, unitPx, formatConstant(b) + 'y', yColor);
+                xPos += unitPx * 3;
+            } else {
+                for(let i=0; i<Math.abs(b); i++) {
+                    roughTileCanvas.rectangle(xPos, y - unitPx, unitPx, unitPx*2, { fill: yColor, fillStyle: 'solid', strokeWidth: 1 });
+                    xPos += unitPx*1.2;
+                }
+            }
+            if(Math.abs(b) < 0.001) yBounds = null;
+
+            tileCtx.font = "bold 24px Gochi Hand";
+            tileCtx.fillStyle = "#334155";
+            tileCtx.fillText("=", xPos + 5, y + 8);
+            xPos += 30;
+
+            let cBounds = { start: xPos, end: xPos + cSectionW, top: y - unitPx - 5, bottom: y + unitPx + 5 };
+
+            // Draw Constants
+            const cColor = (c > 0) ? '#e2e8f0' : '#94a3b8';
+            if (isGroupC) {
+                drawGroupBlock(xPos, y, unitPx, formatConstant(c), cColor);
+                xPos += unitPx * 3;
+            } else {
+                for(let i=0; i<Math.abs(c); i++) {
+                    roughTileCanvas.rectangle(xPos, y - unitPx/2, unitPx, unitPx, { fill: cColor, fillStyle: 'solid', strokeWidth: 1 });
+                    xPos += unitPx*1.2;
+                }
+            }
+            if(Math.abs(c) < 0.001) cBounds = null;
+
+            return { xBounds, yBounds, cBounds };
+        }
+        
+        function drawGroupBlock(x, y, unit, text, color) {
+            // Draw a larger box representing the group
+            roughTileCanvas.rectangle(x, y - unit, unit*2.5, unit*2, { fill: color, fillStyle: 'hachure', strokeWidth: 2 });
+            tileCtx.font = "bold 20px Gochi Hand";
+            tileCtx.fillStyle = "#000";
+            tileCtx.fillText(text, x + unit*0.8, y + 6);
+        }
+
+        // --- INIT ---
+        window.addEventListener('resize', resizeCanvases);
+        document.getElementById('resetBtn').addEventListener('click', generateProblem);
+
+        // Initial Start
+        generateProblem();
+        resizeCanvases();
+
+    </script>
+</body>
+</html>
