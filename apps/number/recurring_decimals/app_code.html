@@ -1,1 +1,907 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Decimal Repeater</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/roughjs@latest/bundled/rough.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Gochi+Hand&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .sketch-font { font-family: 'Gochi Hand', cursive; }
+        .rough-area { filter: url(#rough-paper); }
+        
+        .sketch-input {
+            border: 2px solid #334155;
+            border-radius: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            font-family: 'Gochi Hand', cursive;
+            font-size: 1.25rem;
+            text-align: center;
+            outline: none;
+            background-color: #fff;
+            transition: all 0.2s;
+        }
+        .sketch-input:focus {
+            border-color: #4f46e5;
+            box-shadow: 2px 2px 0px 0px #4f46e5;
+        }
+        .sketch-btn {
+            background-color: #fff;
+            border: 2px solid #1e293b;
+            font-family: 'Gochi Hand', cursive;
+            font-weight: bold;
+            box-shadow: 3px 3px 0px 0px #1e293b;
+            transition: all 0.1s;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+        }
+        .sketch-btn:active {
+            box-shadow: none;
+            transform: translate(2px, 2px);
+        }
+        
+        /* Small circular buttons for step 2 */
+        .jump-btn {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            background: #e0e7ff;
+            border: 2px solid #4338ca;
+            color: #4338ca;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .jump-btn:hover { background: #c7d2fe; }
+        .jump-btn:active { transform: scale(0.95); }
+
+        .step-container {
+            transition: all 0.4s ease;
+        }
+        /* New Sub-box styling */
+        .sub-box {
+            background-color: #f8fafc; /* slate-50 */
+            border: 2px dashed #cbd5e1; /* slate-300 */
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        .locked {
+            opacity: 0.4;
+            pointer-events: none;
+            filter: grayscale(1);
+        }
+        .dot-repeater {
+            text-decoration: overline dotted;
+        }
+        
+        /* Prime Bubble Styles */
+        .bubble {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-family: 'Gochi Hand', cursive;
+            border: 2px solid #334155;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s, opacity 0.2s;
+            user-select: none;
+            background-color: #dbeafe; /* blue-100 */
+            color: #1e40af; /* blue-800 */
+        }
+        .bubble:hover { transform: scale(1.1); }
+        .bubble.selected { background-color: #fef08a; border-color: #eab308; }
+        
+        /* Ghosted state instead of popped */
+        .bubble.ghost {
+            opacity: 0.3;
+            pointer-events: none;
+            background-color: #94a3b8; /* slate-400 */
+            color: #fff;
+            border-color: #cbd5e1;
+            transform: scale(0.9);
+        }
+        
+        /* Strike animation individual lines */
+        .strike-mark {
+            position: absolute;
+            height: 2px;
+            width: 120%;
+            background-color: #ef4444;
+            top: 50%;
+            left: -10%;
+            transform: rotate(-20deg);
+            opacity: 0;
+            transition: opacity 0.2s ease-in;
+            pointer-events: none;
+        }
+        .strike-active .strike-mark {
+            opacity: 1;
+        }
+
+        canvas { border-radius: 8px; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <!-- SVG Filter for Rough Effect -->
+    <svg style="position: absolute; width: 0; height: 0;">
+        <filter id="rough-paper">
+            <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" />
+        </filter>
+    </svg>
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        <!-- Header -->
+        <header class="bg-white border-4 border-slate-800 p-6 rounded-xl shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] flex flex-col md:flex-row justify-between items-center gap-6">
+            <div>
+                <h1 class="text-4xl font-bold sketch-font text-slate-800">The Decimal Repeater</h1>
+                <p class="text-slate-600 font-semibold italic">Mastering the Algebra of Infinite Decimals</p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 bg-slate-50 p-4 border-2 border-slate-800 rounded-lg">
+                <div class="flex flex-col">
+                    <label class="text-[10px] uppercase font-bold text-slate-500">Whole</label>
+                    <input type="number" id="cfg-whole" value="0" min="0" max="99" class="sketch-input w-16">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-[10px] uppercase font-bold text-slate-500">Static</label>
+                    <input type="number" id="cfg-static" value="0" min="0" max="3" class="sketch-input w-16">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-[10px] uppercase font-bold text-slate-500">Repeat</label>
+                    <input type="number" id="cfg-repeat" value="1" min="1" max="4" class="sketch-input w-16">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="generateNew()" class="sketch-btn bg-yellow-400 text-sm">New</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid md:grid-cols-12 gap-8">
+            <!-- Left: Workspace -->
+            <div class="md:col-span-7 space-y-6">
+                <div class="bg-white border-4 border-slate-800 p-8 rounded-xl shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] rough-area">
+                    
+                    <div id="problem-display" class="text-3xl text-center sketch-font bg-slate-50 py-6 border-2 border-dashed border-slate-300 rounded-lg mb-8">
+                        Loading...
+                    </div>
+
+                    <div class="space-y-10">
+                        <!-- Step 1: Assignment -->
+                        <section id="step-1" class="step-container">
+                            <h3 class="sketch-font text-xl font-bold text-indigo-700 underline mb-2">Step 1: Assign a variable</h3>
+                            <p class="text-slate-600 mb-2">Let's start by letting our decimal be represented by $x$. Write the expanded form including 2 repetitions.</p>
+                            
+                            <div class="sub-box bg-indigo-50 border-indigo-200 border-solid">
+                                <div class="flex items-center justify-center gap-2 text-2xl sketch-font">
+                                    <span>$x =$</span>
+                                    <input type="text" id="input-expansion" class="sketch-input w-48" placeholder="e.g. 0.33">
+                                    <span>...</span>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center mt-4">
+                                <button onclick="checkStep1()" class="sketch-btn text-sm">Check Expansion</button>
+                                <div id="feedback-1" class="mt-2 text-sm font-bold"></div>
+                            </div>
+                        </section>
+
+                        <!-- Step 2: Multiplication -->
+                        <section id="step-2" class="step-container locked">
+                            <h3 class="sketch-font text-xl font-bold text-indigo-700 underline mb-2">Step 2: Create a pair</h3>
+                            <p class="text-slate-600 mb-2 text-sm">Multiply by powers of 10 ($10, 100...$) to align the decimal parts.</p>
+                            
+                            <div class="sub-box">
+                                <div class="space-y-6 max-w-md mx-auto">
+                                    
+                                    <!-- Row 1 -->
+                                    <div class="flex flex-col gap-1">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <button class="jump-btn" onclick="adjustMult(1, 0.1)">÷</button>
+                                                <input type="number" id="mult-1" class="sketch-input w-24" value="1" readonly>
+                                                <button class="jump-btn" onclick="adjustMult(1, 10)">×</button>
+                                                <span class="sketch-font text-xl ml-2">$x =$</span>
+                                            </div>
+                                            <div id="mult-1-res" class="sketch-font text-xl text-indigo-800 font-bold">?</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Row 2 -->
+                                    <div class="flex flex-col gap-1">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <button class="jump-btn" onclick="adjustMult(2, 0.1)">÷</button>
+                                                <input type="number" id="mult-2" class="sketch-input w-24" value="1" readonly>
+                                                <button class="jump-btn" onclick="adjustMult(2, 10)">×</button>
+                                                <span class="sketch-font text-xl ml-2">$x =$</span>
+                                            </div>
+                                            <div id="mult-2-res" class="sketch-font text-xl text-indigo-800 font-bold">?</div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            
+                            <div class="text-center mt-4">
+                                <button onclick="checkMultipliers()" class="sketch-btn text-sm bg-indigo-50">Check Alignment</button>
+                                <div id="feedback-2" class="mt-2 text-sm font-bold"></div>
+                            </div>
+                        </section>
+
+                        <!-- Step 3: Subtraction -->
+                        <section id="step-3" class="step-container locked">
+                            <h3 class="sketch-font text-xl font-bold text-indigo-700 underline mb-2">Step 3: Subtract the Equations</h3>
+                            <p class="text-slate-600 mb-2 text-sm">Subtracting cancels the infinite repeating part! What remains?</p>
+                            
+                            <div class="sub-box">
+                                <div class="flex items-center justify-center gap-2 text-2xl sketch-font">
+                                    <input type="number" id="sub-lhs" class="sketch-input w-20" placeholder="9x">
+                                    <span>$x =$</span>
+                                    <input type="number" id="sub-rhs" class="sketch-input w-24" placeholder="Whole">
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button onclick="checkSubtraction()" class="sketch-btn text-sm">Perform Subtraction</button>
+                                <div id="feedback-3" class="mt-2 text-sm font-bold"></div>
+                            </div>
+                        </section>
+
+                        <!-- Step 4: Final Fraction -->
+                        <section id="step-4" class="step-container locked">
+                            <h3 class="sketch-font text-xl font-bold text-indigo-700 underline mb-2">Step 4: Solve for x</h3>
+                            <div class="flex flex-col items-center gap-6">
+                                
+                                <!-- Part 4A: Initial Fraction -->
+                                <div id="step-4a" class="w-full">
+                                    <p class="text-slate-600 text-sm mb-2 text-center">Write the equation as a fraction:</p>
+                                    <div class="sub-box">
+                                        <div class="flex items-center justify-center gap-4 text-2xl sketch-font">
+                                            <span>$x =$</span>
+                                            <div class="flex flex-col items-center">
+                                                <input type="number" id="final-num" class="sketch-input w-20" placeholder="Top">
+                                                <div class="w-full h-1 bg-slate-800 my-1"></div>
+                                                <input type="number" id="final-den" class="sketch-input w-20" placeholder="Bot">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-center mt-4">
+                                        <button onclick="checkFinal()" class="sketch-btn bg-emerald-100">Check Fraction</button>
+                                        <div id="feedback-4" class="text-lg mt-2"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Part 4B: Simplify (Hidden initially) -->
+                                <div id="step-4b" class="hidden w-full flex-col items-center animate-pop">
+                                    <p class="text-indigo-700 font-bold mb-2 text-center">Simplify using Prime Factors!</p>
+                                    <div class="sub-box bg-emerald-50 border-emerald-200 border-solid w-full">
+                                        
+                                        <!-- Prime Bubbles Container -->
+                                        <div id="prime-container" class="flex flex-col items-center gap-4 mb-6">
+                                            <div id="bubbles-num" class="flex flex-wrap gap-2 justify-center min-h-[3rem]"></div>
+                                            <div class="w-full border-t-2 border-slate-400"></div>
+                                            <div id="bubbles-den" class="flex flex-wrap gap-2 justify-center min-h-[3rem]"></div>
+                                            <p class="text-xs text-slate-500 italic">Click matching pairs to turn them into 1s!</p>
+                                        </div>
+
+                                        <div class="flex items-center justify-center gap-4 text-2xl sketch-font">
+                                            <span>$x =$</span>
+                                            <div class="flex flex-col items-center">
+                                                <input type="number" id="simp-num" class="sketch-input w-20" placeholder="Top">
+                                                <div class="w-full h-1 bg-slate-800 my-1"></div>
+                                                <input type="number" id="simp-den" class="sketch-input w-20" placeholder="Bot">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-center mt-4">
+                                        <button onclick="checkSimplified()" class="sketch-btn bg-emerald-400">Check Simplified</button>
+                                        <div id="feedback-simp" class="text-lg mt-2"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Part 4C: Visual Proof (Hidden) -->
+                                <div id="step-4c" class="hidden w-full flex-col items-center animate-pop mt-6">
+                                    <div class="sub-box bg-white border-4 border-yellow-400 shadow-lg">
+                                        <h4 class="text-center font-bold sketch-font text-xl mb-4 text-yellow-900">The Visual Proof</h4>
+                                        <div class="flex justify-center">
+                                            <canvas id="pieCanvas" width="200" height="200"></canvas>
+                                        </div>
+                                        <div class="mt-2 flex justify-between w-full px-4 text-xs font-bold font-mono text-slate-700">
+                                            <span>Fraction</span>
+                                            <span>Decimal</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Visualizer -->
+            <div class="md:col-span-5 space-y-6">
+                <!-- Magnifier Visual -->
+                <div class="bg-white border-4 border-slate-800 rounded-xl overflow-hidden shadow-[8px_8px_0px_0px_rgba(30,41,59,1)]">
+                    <div class="bg-slate-800 p-2 text-white text-xs font-bold uppercase tracking-widest text-center">Alignment Magnifier</div>
+                    <div id="visual-container" class="p-4 h-64 flex flex-col justify-center gap-8 relative bg-slate-50 overflow-hidden">
+                        
+                        <!-- Row 1 -->
+                        <div class="flex w-full items-center relative z-10">
+                            <div id="row-1-int" class="w-1/2 text-right font-mono text-2xl tracking-tighter opacity-30 transition-all duration-300 pr-1"></div>
+                            <div class="text-red-500 font-bold text-2xl relative -top-1">.</div>
+                            <div id="row-1-dec" class="w-1/2 text-left font-mono text-2xl tracking-tighter opacity-30 transition-all duration-300 pl-1 flex"></div>
+                        </div>
+
+                        <!-- Row 2 -->
+                        <div class="flex w-full items-center relative z-10">
+                            <div id="row-2-int" class="w-1/2 text-right font-mono text-2xl tracking-tighter opacity-30 transition-all duration-300 pr-1"></div>
+                            <div class="text-red-500 font-bold text-2xl relative -top-1">.</div>
+                            <div id="row-2-dec" class="w-1/2 text-left font-mono text-2xl tracking-tighter opacity-30 transition-all duration-300 pl-1 flex"></div>
+                        </div>
+
+                        <!-- Centered separator -->
+                        <div class="absolute left-1/2 top-0 bottom-0 w-px bg-red-400/30 border-l border-dashed border-red-500 z-0"></div>
+                        <div class="absolute left-1/2 top-2 -translate-x-1/2 bg-red-500 text-[8px] text-white px-1 rounded z-20">DECIMAL POINT</div>
+                        
+                        <!-- Strike lines containers -->
+                        <div id="strike-1" class="strike-line top-[35%] left-1/2 w-0 hidden"></div>
+                        <div id="strike-2" class="strike-line top-[65%] left-1/2 w-0 hidden"></div>
+                    </div>
+                </div>
+
+                <!-- Teacher Tip -->
+                <div id="tip-container" class="bg-amber-50 border-4 border-slate-800 p-6 rounded-xl shadow-[4px_4px_0px_0px_rgba(30,41,59,1)]">
+                    <h4 class="sketch-font font-bold text-amber-900 text-lg mb-2">Teacher's Insight:</h4>
+                    <p id="tip-box" class="text-sm text-amber-800 leading-relaxed italic">
+                        "Use the jump buttons to shift the decimals. The goal is to make everything after the decimal point match exactly!"
+                    </p>
+                </div>
+                
+                <!-- Proof Container (Hidden initially, appears on right side) -->
+                <div id="proof-container" class="hidden bg-yellow-50 border-4 border-yellow-400 p-4 rounded-xl shadow-[4px_4px_0px_0px_rgba(234,179,8,1)] animate-pop flex-col items-center">
+                    <h4 class="text-center font-bold sketch-font text-xl mb-4 text-yellow-900">The Visual Proof</h4>
+                    <div class="flex justify-center w-full">
+                        <canvas id="pieCanvasSide" width="320" height="180"></canvas>
+                    </div>
+                    <div class="mt-2 flex justify-between w-full px-4 text-xs font-bold font-mono text-slate-700">
+                        <span>Fraction</span>
+                        <span>Decimal</span>
+                    </div>
+                </div>
+
+                <!-- SDG -->
+                <div class="bg-emerald-50 border-4 border-slate-800 rounded-xl p-4 flex items-center gap-4 shadow-[4px_4px_0px_0px_rgba(30,41,59,1)]">
+                    <div class="shrink-0 w-12 h-12 bg-emerald-600 rounded flex items-center justify-center text-white font-bold text-xl">4</div>
+                    <div class="text-[10px] leading-tight text-emerald-900 uppercase font-bold">
+                        Quality Education: <span class="font-normal normal-case">Developing algebraic fluency to translate between numerical representations.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let state = {
+            whole: 0,
+            static: "",
+            repeat: "",
+            fullDecimal: "",
+            step: 1
+        };
+        
+        let selectedBubble = null;
+
+        // --- UTILS ---
+        function gcd(a, b) {
+            return b === 0 ? a : gcd(b, a % b);
+        }
+        
+        function getPrimeFactors(n) {
+            const factors = [];
+            let d = 2;
+            let temp = n;
+            while (d * d <= temp) {
+                while (temp % d === 0) {
+                    factors.push(d);
+                    temp /= d;
+                }
+                d++;
+            }
+            if (temp > 1) factors.push(temp);
+            return factors;
+        }
+
+        function generateNew() {
+            const w = parseInt(document.getElementById('cfg-whole').value) || 0;
+            const sCount = parseInt(document.getElementById('cfg-static').value) || 0;
+            const rCount = parseInt(document.getElementById('cfg-repeat').value) || 1;
+
+            // Generate digits
+            let sDigits = "";
+            for(let i=0; i<sCount; i++) sDigits += Math.floor(Math.random()*10);
+            
+            let rDigits = "";
+            let firstDigit = Math.floor(Math.random()*9)+1;
+            rDigits += firstDigit;
+            for(let i=1; i<rCount; i++) rDigits += Math.floor(Math.random()*10);
+
+            state.whole = w;
+            state.static = sDigits;
+            state.repeat = rDigits;
+            state.step = 1;
+
+            updateUI();
+        }
+
+        function updateUI() {
+            // LaTeX for the problem
+            const dotNotation = state.repeat.length === 1 
+                ? `\\dot{${state.repeat}}` 
+                : `\\dot{${state.repeat[0]}}${state.repeat.slice(1, -1)}\\dot{${state.repeat.slice(-1)}}`;
+            
+            const problemHtml = `$ ${state.whole}.${state.static}${dotNotation} $`;
+            document.getElementById('problem-display').innerHTML = problemHtml;
+            
+            // Replaced static expanded display with user input setup in Step 1
+            // Clear Step 1 Input
+            document.getElementById('input-expansion').value = "";
+            document.getElementById('input-expansion').readOnly = false;
+            document.getElementById('input-expansion').classList.remove('bg-gray-100');
+
+            // Reset Steps
+            document.querySelectorAll('.step-container').forEach(c => c.classList.add('locked'));
+            document.getElementById('step-1').classList.remove('locked');
+            document.getElementById('step-1').classList.remove('opacity-50'); // Reset opacity
+            document.getElementById('step-2').classList.add('locked');
+            document.getElementById('step-4b').classList.add('hidden');
+            document.getElementById('step-4b').classList.remove('flex');
+            
+            document.getElementById('proof-container').classList.add('hidden');
+            document.getElementById('proof-container').classList.remove('flex');
+            document.getElementById('tip-container').classList.remove('hidden'); // Show tips again
+            
+            // Clear inputs
+            document.querySelectorAll('input:not([id^="cfg"]):not([id="input-expansion"])').forEach(i => {
+                if(i.id.includes('mult')) return; // Don't clear mult inputs
+                i.value = "";
+            });
+            document.querySelectorAll('[id^="feedback"]').forEach(f => f.innerHTML = "");
+            
+            // Set defaults for multipliers - UPDATED TO 1, 1
+            document.getElementById('mult-1').value = "1";
+            document.getElementById('mult-2').value = "1";
+            
+            // Update display texts for multipliers
+            refreshMultText();
+
+            // Clear visual effects
+            document.getElementById('strike-1').style.width = '0';
+            document.getElementById('strike-2').style.width = '0';
+            document.getElementById('strike-1').classList.add('hidden');
+            document.getElementById('strike-2').classList.add('hidden');
+
+            renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}] });
+            updateVisual(1, 1); 
+        }
+        
+        // CHECK STEP 1
+        function checkStep1() {
+            const input = document.getElementById('input-expansion').value.trim();
+            // Expected: Whole.StaticRepeatRepeat
+            const expected = `${state.whole}.${state.static}${state.repeat}${state.repeat}`;
+            
+            if (input === expected) {
+                feedback(1, true);
+                document.getElementById('step-2').classList.remove('locked');
+                document.getElementById('step-1').classList.add('opacity-50');
+                document.getElementById('input-expansion').readOnly = true;
+                document.getElementById('input-expansion').classList.add('bg-gray-100');
+            } else {
+                feedback(1, false, "Write the number with 2 repetitions (e.g. " + expected + ")");
+            }
+        }
+        
+        function adjustMult(idx, factor) {
+            const el = document.getElementById(`mult-${idx}`);
+            let val = parseFloat(el.value);
+            val = val * factor;
+            
+            if (val < 1) val = 1;
+            if (val > 1000000) val = 1000000;
+            
+            val = Math.pow(10, Math.round(Math.log10(val)));
+            
+            el.value = val;
+            refreshMultText();
+            
+            const m1 = parseInt(document.getElementById('mult-1').value);
+            const m2 = parseInt(document.getElementById('mult-2').value);
+            updateVisual(m1, m2);
+        }
+        
+        function refreshMultText() {
+            const m1 = parseInt(document.getElementById('mult-1').value);
+            const m2 = parseInt(document.getElementById('mult-2').value);
+            document.getElementById('mult-1-res').innerText = formatShiftedString(m1);
+            document.getElementById('mult-2-res').innerText = formatShiftedString(m2);
+        }
+
+        function completeStep(n) {
+            // Deprecated, logic moved to checkStep1
+        }
+
+        function getShifted(multiplier) {
+            // Calculate actual value for checking
+            const val = state.whole + (state.static + state.repeat.repeat(10)).split('').reduce((acc, d, i) => acc + d / Math.pow(10, i+1), 0);
+            return val * multiplier;
+        }
+
+        function formatShiftedString(multiplier) {
+            // Shift manually for display to keep infinite look
+            let combined = state.whole.toString() + state.static + state.repeat.repeat(10);
+            let pointPos = state.whole.toString().length;
+            let shift = Math.log10(multiplier);
+            let newPointPos = pointPos + shift;
+            
+            if (newPointPos > combined.length) combined = combined.padEnd(newPointPos + 8, state.repeat);
+            
+            let before = combined.slice(0, newPointPos);
+            // REMOVE LEADING ZEROS for display if number > 0
+            if (before.length > 1 && before.startsWith('0')) {
+                before = parseInt(before).toString();
+            }
+            
+            let after = combined.slice(newPointPos, newPointPos + 8);
+            return `${before}.${after}...`;
+        }
+
+        function checkMultipliers() {
+            const m1 = parseInt(document.getElementById('mult-1').value);
+            const m2 = parseInt(document.getElementById('mult-2').value);
+            
+            if (!m1 || !m2 || m1 <= m2) {
+                feedback(2, false, "Top multiplier must be larger than bottom.");
+                return;
+            }
+
+            const s1 = formatShiftedString(m1);
+            const s2 = formatShiftedString(m2);
+
+            // Check if decimals align
+            const dec1 = s1.split('.')[1].slice(0, 5);
+            const dec2 = s2.split('.')[1].slice(0, 5);
+
+            if (dec1 === dec2) {
+                feedback(2, true);
+                document.getElementById('step-3').classList.remove('locked');
+                updateVisual(m1, m2);
+                document.getElementById('tip-box').innerText = "Perfect! See how the decimal columns in the visualizer match up? When we subtract, all those infinite digits will become zero.";
+            } else {
+                feedback(2, false, "Decimals don't align. Try shifting by the 'repeat' length.");
+                updateVisual(m1, m2);
+            }
+        }
+
+        function checkSubtraction() {
+            const m1 = parseInt(document.getElementById('mult-1').value);
+            const m2 = parseInt(document.getElementById('mult-2').value);
+            const uLhs = parseInt(document.getElementById('sub-lhs').value);
+            const uRhs = parseInt(document.getElementById('sub-rhs').value);
+
+            const targetLhs = m1 - m2;
+            const trueRhs = Math.round(getShifted(m1) - getShifted(m2));
+
+            if (uLhs === targetLhs && Math.abs(uRhs - trueRhs) < 0.1) {
+                feedback(3, true);
+                document.getElementById('step-4').classList.remove('locked');
+                // Trigger Strike Animation on Magnifier digits
+                animateCancellation();
+            } else {
+                feedback(3, false, "Check your subtraction.");
+            }
+        }
+        
+        function animateCancellation() {
+            // Find all matching digits in the magnifier and add strike
+            const row1Digits = document.getElementById('row-1-dec').children;
+            const row2Digits = document.getElementById('row-2-dec').children;
+            
+            let delay = 0;
+            // Iterate and strike
+            for(let i=0; i < Math.min(row1Digits.length, row2Digits.length); i++) {
+                setTimeout(() => {
+                    const strike1 = document.createElement('div');
+                    strike1.className = 'strike-mark';
+                    row1Digits[i].appendChild(strike1);
+                    void strike1.offsetWidth; 
+                    strike1.parentElement.classList.add('strike-active');
+                    
+                    const strike2 = document.createElement('div');
+                    strike2.className = 'strike-mark';
+                    row2Digits[i].appendChild(strike2);
+                    void strike2.offsetWidth; 
+                    strike2.parentElement.classList.add('strike-active');
+                    
+                }, delay);
+                delay += 80; // slightly slower for dramatic effect
+            }
+        }
+
+        function checkFinal() {
+            const num = parseInt(document.getElementById('final-num').value);
+            const den = parseInt(document.getElementById('final-den').value);
+            
+            if (!num || !den) return;
+
+            const uLhs = parseInt(document.getElementById('sub-lhs').value);
+            const uRhs = parseInt(document.getElementById('sub-rhs').value);
+            
+            if (num === uRhs && den === uLhs) {
+                document.getElementById('feedback-4').innerHTML = "<span class='text-emerald-600 font-bold'>Correct Initial Fraction!</span>";
+                
+                document.getElementById('step-4b').classList.remove('hidden');
+                document.getElementById('step-4b').classList.add('flex');
+                
+                initPrimeBubbles(num, den);
+                
+                const div = gcd(num, den);
+                if(div === 1) {
+                    document.getElementById('feedback-simp').innerHTML = "<span class='text-blue-600'>This fraction is already in simplest form! You can just copy it.</span>";
+                }
+            } else {
+                feedback(4, false, "Look at Step 3: Divide RHS by LHS coefficient.");
+            }
+        }
+        
+        function initPrimeBubbles(num, den) {
+            const fNum = getPrimeFactors(num);
+            const fDen = getPrimeFactors(den);
+            const cNum = document.getElementById('bubbles-num');
+            const cDen = document.getElementById('bubbles-den');
+            cNum.innerHTML = ""; cDen.innerHTML = "";
+            
+            const createBubble = (val, type, container) => {
+                const b = document.createElement('div');
+                b.className = "bubble";
+                b.innerText = val;
+                b.onclick = () => handleBubbleClick(b, val, type);
+                container.appendChild(b);
+            };
+            
+            fNum.forEach(f => createBubble(f, 'num', cNum));
+            fDen.forEach(f => createBubble(f, 'den', cDen));
+        }
+        
+        function handleBubbleClick(el, val, type) {
+            if (el.classList.contains('ghost')) return;
+
+            if (!selectedBubble) {
+                // Select
+                selectedBubble = { el, val, type };
+                el.classList.add('selected');
+            } else {
+                // Check match
+                if (selectedBubble.val === val && selectedBubble.type !== type) {
+                    // Match! GHOST both (turn to 1)
+                    selectedBubble.el.classList.remove('selected');
+                    selectedBubble.el.classList.add('ghost');
+                    selectedBubble.el.innerText = "1";
+                    
+                    el.classList.add('ghost');
+                    el.innerText = "1";
+                    
+                    selectedBubble = null;
+                } else if (selectedBubble.el === el) {
+                    // Deselect
+                    el.classList.remove('selected');
+                    selectedBubble = null;
+                } else {
+                    // Switch selection if same type, else ignore
+                    if(selectedBubble.type === type) {
+                         selectedBubble.el.classList.remove('selected');
+                         selectedBubble = { el, val, type };
+                         el.classList.add('selected');
+                    }
+                }
+            }
+        }
+
+        function checkSimplified() {
+            const sNum = parseInt(document.getElementById('simp-num').value);
+            const sDen = parseInt(document.getElementById('simp-den').value);
+            const num = parseInt(document.getElementById('final-num').value);
+            const den = parseInt(document.getElementById('final-den').value);
+            
+            if (!sNum || !sDen) return;
+
+            const div = gcd(num, den);
+            const targetNum = num / div;
+            const targetDen = den / div;
+
+            if (sNum === targetNum && sDen === targetDen) {
+                 document.getElementById('feedback-simp').innerHTML = "<span class='text-emerald-600 font-bold text-2xl'>🎉 Perfect! You mastered it!</span>";
+                 
+                 // Show Proof Box on Right
+                 document.getElementById('proof-container').classList.remove('hidden');
+                 document.getElementById('proof-container').classList.add('flex');
+                 document.getElementById('tip-container').classList.add('hidden'); // Hide tips to make room
+                 drawPieProof(sNum, sDen);
+                 
+            } else {
+                 if (Math.abs(sNum/sDen - num/den) < 0.0000001) {
+                     document.getElementById('feedback-simp').innerHTML = "<span class='text-amber-600'>Equivalent, but not fully simplified. Try popping more bubbles.</span>";
+                 } else {
+                     document.getElementById('feedback-simp').innerHTML = "<span class='text-red-600'>Not equivalent. Check your math.</span>";
+                 }
+            }
+        }
+        
+        function drawPieProof(num, den) {
+            const canvas = document.getElementById('pieCanvasSide');
+            const ctx = canvas.getContext('2d');
+            const roughCanvas = rough.canvas(canvas);
+            
+            // Set canvas size for dual display
+            canvas.width = 320;
+            canvas.height = 180;
+            const w = canvas.width;
+            const h = canvas.height;
+            
+            const r = 60; // radius
+            
+            // Left (Fraction) Center
+            const cx1 = 80; const cy1 = 90;
+            
+            // Right (Decimal) Center
+            const cx2 = 240; const cy2 = 90;
+            
+            ctx.clearRect(0, 0, w, h);
+            
+            const val = num / den;
+            const fractionalPart = val % 1; 
+            const effectiveFrac = fractionalPart === 0 ? 1 : fractionalPart;
+            
+            // Draw Outline 1
+            roughCanvas.circle(cx1, cy1, r*2, { stroke: '#1e293b', strokeWidth: 2 });
+            // Draw Outline 2
+            roughCanvas.circle(cx2, cy2, r*2, { stroke: '#1e293b', strokeWidth: 2 });
+            
+            // Animate fill
+            let currentAngle = 0;
+            const targetAngle = effectiveFrac * Math.PI * 2;
+            
+            const animatePie = () => {
+                currentAngle += 0.05;
+                if(currentAngle > targetAngle) currentAngle = targetAngle;
+                
+                // Draw Decimal Fill (Right) - Smooth
+                ctx.beginPath();
+                ctx.moveTo(cx2, cy2);
+                ctx.arc(cx2, cy2, r, -Math.PI/2, -Math.PI/2 + currentAngle);
+                ctx.closePath();
+                ctx.fillStyle = "rgba(16, 185, 129, 0.6)"; // Emerald
+                ctx.fill();
+                
+                // Draw Fraction Fill (Left) - Smooth
+                ctx.beginPath();
+                ctx.moveTo(cx1, cy1);
+                ctx.arc(cx1, cy1, r, -Math.PI/2, -Math.PI/2 + currentAngle);
+                ctx.closePath();
+                ctx.fillStyle = "rgba(59, 130, 246, 0.6)"; // Blue
+                ctx.fill();
+                
+                if(currentAngle < targetAngle) requestAnimationFrame(animatePie);
+                else {
+                    // Draw Fraction Lines on Left (Post animation)
+                    // Visualizing denominator lines
+                    if (den <= 16) {
+                        for(let i=0; i<den; i++) {
+                            const theta = -Math.PI/2 + (i * Math.PI * 2 / den);
+                            const x = cx1 + Math.cos(theta) * r;
+                            const y = cy1 + Math.sin(theta) * r;
+                            roughCanvas.line(cx1, cy1, x, y, { stroke: 'rgba(0,0,0,0.3)', strokeWidth: 1 });
+                        }
+                    }
+                    
+                    // Labels
+                    ctx.fillStyle = "#1e293b";
+                    ctx.font = "bold 16px 'Gochi Hand'";
+                    ctx.textAlign = "center";
+                    
+                    const labelFrac = val >= 1 ? `${Math.floor(val)} + ${Math.round(fractionalPart*den)}/${den}` : `${num}/${den}`;
+                    ctx.fillText(labelFrac, cx1, cy1 + r + 20);
+                    
+                    // Decimal label
+                    let decStr = val.toString();
+                    if(decStr.length > 5) decStr = decStr.substring(0,5) + "...";
+                    ctx.fillText(decStr, cx2, cy2 + r + 20);
+                    
+                    // Equal Sign
+                    ctx.font = "bold 30px sans-serif";
+                    ctx.fillText("=", w/2, cy1);
+                }
+            };
+            animatePie();
+        }
+
+        function feedback(step, isCorrect, msg="") {
+            const el = document.getElementById(`feedback-${step}`);
+            el.innerHTML = isCorrect ? "✅" : `❌ <span class="text-xs">${msg}</span>`;
+        }
+
+        function updateVisual(m1, m2) {
+            const row1Int = document.getElementById('row-1-int');
+            const row1Dec = document.getElementById('row-1-dec');
+            const row2Int = document.getElementById('row-2-int');
+            const row2Dec = document.getElementById('row-2-dec');
+            
+            // Always update text content, even if 1,1
+            const s1 = formatShiftedString(m1).replace('...', '');
+            const s2 = formatShiftedString(m2).replace('...', '');
+
+            const renderRow = (str, containerInt, containerDec, isActive) => {
+                containerInt.innerHTML = "";
+                containerDec.innerHTML = "";
+                
+                const parts = str.split('.');
+                
+                const opacity = isActive ? "1" : "0.4";
+                containerInt.style.opacity = opacity;
+                containerDec.style.opacity = opacity;
+
+                containerInt.innerText = parts[0];
+
+                const after = parts[1];
+                for(let i=0; i<after.length; i++) {
+                    let char = after[i];
+                    const s = document.createElement('span');
+                    s.className = "w-6 text-center border-b border-transparent transition-all relative decimal-digit";
+                    s.innerText = char;
+                    containerDec.appendChild(s);
+                }
+            };
+            
+            // Check alignment for highlighting
+            const dec1 = s1.split('.')[1].slice(0, 5);
+            const dec2 = s2.split('.')[1].slice(0, 5);
+            const isAligned = dec1 === dec2;
+
+            renderRow(s1, row1Int, row1Dec, isAligned);
+            renderRow(s2, row2Int, row2Dec, isAligned);
+            
+            if(isAligned) {
+                row1Int.classList.add("text-emerald-700", "font-bold");
+                row1Dec.classList.add("text-emerald-700", "font-bold");
+                row2Int.classList.add("text-emerald-700", "font-bold");
+                row2Dec.classList.add("text-emerald-700", "font-bold");
+            } else {
+                row1Int.classList.remove("text-emerald-700", "font-bold");
+                row1Dec.classList.remove("text-emerald-700", "font-bold");
+                row2Int.classList.remove("text-emerald-700", "font-bold");
+                row2Dec.classList.remove("text-emerald-700", "font-bold");
+                
+                // Reset strike lines if misaligned
+                document.getElementById('strike-1').style.width = '0';
+                document.getElementById('strike-2').style.width = '0';
+            }
+        }
+
+        window.onload = generateNew;
+    </script>
+</body>
+</html>
