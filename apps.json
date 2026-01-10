@@ -13,21 +13,21 @@
               "title": "Quadratics — Error Analysis",
               "description": "Investigate common mistakes and deepen conceptual understanding.",
               "path": "apps/algebra/quadratic/index.html",
-              "preview": "apps/algebra/quadratic/preview.png"
+              "preview": "apps/algebra/quadratic/preview.jpeg"
             },
             {
               "id": "quadratic_formula",
               "title": "quadratic_formula",
               "description": "quadratic_formula",
               "path": "apps/algebra/quadratic_formula/index.html",
-              "preview": "apps/algebra/quadratic_formula/preview.png"
+              "preview": "apps/algebra/quadratic_formula/preview.jpeg"
             },
             {
               "id": "completing_the_square",
               "title": "completing_the_square",
               "description": "completing_the_square",
               "path": "apps/algebra/completing_the_square/index.html",
-              "preview": "apps/algebra/completing_the_square/preview.png"
+              "preview": "apps/algebra/completing_the_square/preview.jpeg"
             }
           ]
         },
@@ -40,14 +40,14 @@
               "title": "simultaneous_elimination",
               "description": "simultaneous_elimination",
               "path": "apps/algebra/simultaneous_elimination/index.html",
-              "preview": "apps/algebra/simultaneous_elimination/preview.png"
+              "preview": "apps/algebra/simultaneous_elimination/preview.jpeg"
             },
             {
               "id": "simultaneous_quadratic",
               "title": "simultaneous_quadratic",
               "description": "simultaneous_quadratic",
               "path": "apps/algebra/simultaneous_quadratic/index.html",
-              "preview": "apps/algebra/simultaneous_quadratic/preview.png"
+              "preview": "apps/algebra/simultaneous_quadratic/preview.jpeg"
             }
           ]
         }
@@ -67,7 +67,7 @@
               "title": "recurring_decimals",
               "description": "recurring_decimals",
               "path": "apps/number/recurring_decimals/index.html",
-              "preview": "apps/number/recurring_decimals/preview.png"
+              "preview": "apps/number/recurring_decimals/preview.jpeg"
             }
           ]
         }
