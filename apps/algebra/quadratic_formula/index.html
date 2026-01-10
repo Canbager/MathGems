@@ -81,8 +81,7 @@
     </div>
   </footer>
 
-  <!-- SCRIPT -->
-  <script>
+ <script>
     // MOBILE MENU
     const menuBtn = document.getElementById('menuBtn');
     const mobileMenu = document.getElementById('mobileMenu');
@@ -94,7 +93,12 @@
     let topics = [];
     let currentTopic = null;
     let currentSubtopic = null;
-    let currentAppPath = window.location.pathname.split('/').pop();
+
+    // FIX: Get the folder name instead of just 'index.html'
+    // This grabs the second-to-last item in the path: 'simultaneous_elimination'
+    const pathParts = window.location.pathname.split('/');
+    // Handle cases with or without trailing slash, though usually it's .../folder/index.html
+    const currentFolder = pathParts[pathParts.length - 2]; 
 
     fetch('../../../apps.json')
       .then(r => r.json())
@@ -105,10 +109,25 @@
       });
 
     function findCurrentLocation() {
+      // 1. Try to find via URL params first (Most reliable if links are generated correctly)
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramTopicId = urlParams.get('topic');
+      const paramSubId = urlParams.get('subtopic');
+
+      if (paramTopicId && paramSubId) {
+        currentTopic = topics.find(t => t.id === paramTopicId);
+        if (currentTopic) {
+          currentSubtopic = currentTopic.subtopics.find(s => s.id === paramSubId);
+        }
+        if (currentTopic && currentSubtopic) return; // Found it!
+      }
+
+      // 2. Fallback: Search by Folder Name in apps.json
       for (const topic of topics) {
         for (const sub of topic.subtopics) {
           for (const app of sub.apps) {
-            if (app.path.endsWith(currentAppPath)) {
+            // Check if the app path includes the unique folder name
+            if (app.path.includes(currentFolder)) {
               currentTopic = topic;
               currentSubtopic = sub;
               return;
@@ -123,23 +142,22 @@
       const subtopicLink = document.getElementById('subtopicLink');
 
       if (!currentTopic || !currentSubtopic) {
-        topicLink.textContent = 'Unknown Topic';
-        subtopicLink.textContent = 'Unknown Subtopic';
-        subtopicLink.href = '../../../index.html';
+        topicLink.textContent = 'MathGems'; // Default text
+        subtopicLink.textContent = '';
         return;
       }
 
       topicLink.textContent = currentTopic.name;
       subtopicLink.textContent = currentSubtopic.name;
 
-      // Correct deep link back to subtopic
+      // Deep link back to homepage with correct state
       subtopicLink.href =
         '../../../index.html?topic=' +
         encodeURIComponent(currentTopic.id) +
         '&subtopic=' +
         encodeURIComponent(currentSubtopic.id);
     }
-  </script>
+</script>
 
 </body>
 </html>
