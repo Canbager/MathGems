@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta-name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Browse Topics — MathGems</title>
 
   <!-- Tailwind CSS -->
@@ -11,19 +11,21 @@
   <!-- Inter Font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-  <!-- Global Styles  -->
+  <!-- Global Styles -->
   <link rel="stylesheet" href="css/styles.css">
 </head>
 
 <body class="bg-gray-50 text-gray-800">
 
-  <!-- NAVBAR -->
+  <!-- NAVBAR (matched to index.html) -->
   <header class="bg-white shadow-sm">
     <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-      <div class="flex items-center space-x-2">
-        <img src="img/gem.svg" alt="MathGems logo" class="w-7 h-7">
-        <span class="text-2xl font-bold">
-          <span class="text-gray-900">Math</span><span class="text-blue-600">Gems</span>
+
+      <!-- Left: Logo + Title -->
+      <div class="flex items-center space-x-3">
+        <img src="img/mathgems_logo.jpeg" alt="Math Gems logo" style="height:6.5rem" class="w-auto mb-6 md:mb-0">
+        <span class="text-2xl font-bold text-gray-900">
+          Math<span class="text-blue-600">Gems</span>
         </span>
       </div>
 
@@ -32,15 +34,15 @@
         <a href="index.html" class="text-gray-700 hover:text-blue-600">Home</a>
         <a href="topics.html" class="text-blue-600 font-semibold">Browse Topics</a>
       </nav>
-
-      <!-- Mobile Menu Button -->
-      <button id="menuBtn" class="md:hidden focus:outline-none">
-        <svg class="w-7 h-7 text-gray-700" fill="none" stroke="currentColor" stroke-width="2"
-             viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 6h16M4 12h16M4 18h16"/>
-        </svg>
-      </button>
     </div>
+
+    <!-- Mobile Menu Button -->
+    <button id="menuBtn" class="md:hidden focus:outline-none px-6 py-4">
+      <svg class="w-7 h-7 text-gray-700" fill="none" stroke="currentColor" stroke-width="2"
+           viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
 
     <!-- Mobile Menu Panel -->
     <nav id="mobileMenu"
@@ -50,18 +52,19 @@
     </nav>
   </header>
 
-  <!-- PAGE HEADER -->
-  <section class="max-w-4xl mx-auto px-6 py-12 text-center">
-    <img src="img/gem.svg" class="w-12 h-12 mx-auto mb-4 opacity-80">
-    <h1 class="text-4xl font-bold mb-3">Browse Topics</h1>
-    <p class="text-gray-600">Explore interactive tools across algebra, number, geometry, and more.</p>
+  <!-- PAGE HEADER (now consistent with index hero spacing) -->
+  <section class="max-w-5xl mx-auto px-6 py-16 text-center">
+    <img src="img/mathgems_logo.jpeg" alt="Math Gems logo" style="height:6rem" class="mx-auto mb-6 opacity-90">
+    <h1 class="text-4xl font-bold mb-4">Browse Topics</h1>
+    <p class="text-gray-600 text-lg">
+      Explore interactive tools across algebra, number, geometry, and more.
+    </p>
   </section>
 
   <!-- APPS GRID -->
   <section class="max-w-6xl mx-auto px-6 pb-20">
-    <div id="appsGrid"
-         class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-      <!-- Cards will be injected here -->
+    <div id="appsGrid" class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      <!-- Cards injected here -->
     </div>
   </section>
 
