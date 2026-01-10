@@ -17,32 +17,34 @@
 
 <body class="bg-gray-50 text-gray-800">
 
-  <!-- NAVBAR -->
+  <!-- NAVBAR (fully consistent with index.html) -->
   <header class="bg-white shadow-sm">
     <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-        <!-- Left side: logo + title -->
-        <div class="flex items-center space-x-3">
-          <img src="../../../img/mathgems_logo.png" alt="Math Gems logo" class="h-24 w-auto">
-          <span class="text-2xl font-bold text-gray-900">
-            Math<span class="text-blue-600">Gems</span>
-          </span>
-        </div>
-      
-        <!-- Right side: nav or other content -->
-        <nav class="hidden md:flex space-x-6">
-          <a href="../../../index.html" class="text-gray-700 hover:text-blue-600">Home</a>
-          <a href="../../../topics.html" class="text-gray-700 hover:text-blue-600">Browse Topics</a>
-        </nav>
+
+      <!-- Left: logo + title -->
+      <div class="flex items-center space-x-3">
+        <img src="../../../img/mathgems_logo.jpeg" alt="Math Gems logo" style="height:6.5rem" class="w-auto mb-6 md:mb-0">
+        <span class="text-2xl font-bold text-gray-900">
+          Math<span class="text-blue-600">Gems</span>
+        </span>
       </div>
 
-      <button id="menuBtn" class="md:hidden focus:outline-none">
-        <svg class="w-7 h-7 text-gray-700" fill="none" stroke="currentColor" stroke-width="2"
-             viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 6h16M4 12h16M4 18h16"/>
-        </svg>
-      </button>
+      <!-- Desktop Nav -->
+      <nav class="hidden md:flex space-x-6">
+        <a href="../../../index.html" class="text-gray-700 hover:text-blue-600">Home</a>
+        <a href="../../../topics.html" class="text-gray-700 hover:text-blue-600">Browse Topics</a>
+      </nav>
     </div>
 
+    <!-- Mobile Menu Button -->
+    <button id="menuBtn" class="md:hidden focus:outline-none px-6 py-4">
+      <svg class="w-7 h-7 text-gray-700" fill="none" stroke="currentColor" stroke-width="2"
+           viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
+
+    <!-- Mobile Menu Panel -->
     <nav id="mobileMenu"
          class="md:hidden hidden flex-col bg-white border-t border-gray-200 px-6 py-4 space-y-4">
       <a href="../../../index.html" class="block text-gray-700 hover:text-blue-600">Home</a>
