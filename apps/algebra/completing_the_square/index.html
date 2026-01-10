@@ -21,6 +21,7 @@
   <header class="bg-white shadow-sm">
     <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
 
+      <!-- Left: logo + title -->
       <div class="flex items-center space-x-3">
         <img src="../../../img/mathgems_logo.jpeg" alt="Math Gems logo"
              style="height:6.5rem" class="w-auto mb-6 md:mb-0">
@@ -29,6 +30,7 @@
         </span>
       </div>
 
+      <!-- Desktop Nav -->
       <nav class="hidden md:flex space-x-6">
         <a href="../../../index.html" class="text-gray-700 hover:text-blue-600">Home</a>
         <a href="../../../topics.html" class="text-gray-700 hover:text-blue-600">Browse Topics</a>
@@ -47,18 +49,18 @@
     <nav id="mobileMenu"
          class="md:hidden hidden flex-col bg-white border-t border-gray-200 px-6 py-4 space-y-4">
       <a href="../../../index.html" class="block text-gray-700 hover:text-blue-600">Home</a>
-      <a href="../../../topics.html" class="block text-gray-700 hover:text-blue-600">Browse Topics</a>
+      <a href="../../../index.html" class="block text-gray-700 hover:text-blue-600">Browse Topics</a>
     </nav>
   </header>
 
-  <!-- TOP NAVIGATION BAR (Topic › Subtopic) -->
+  <!-- TOP NAVIGATION BAR -->
   <section class="bg-white border-b shadow-sm">
     <div class="max-w-6xl mx-auto px-6 py-4">
 
       <nav class="text-sm text-gray-600 space-x-2">
-        <a id="topicLink" class="text-blue-600 font-semibold hover:underline"></a>
+        <a id="topicLink" href="../../../index.html" class="text-blue-600 font-semibold hover:underline"></a>
         <span>›</span>
-        <a id="subtopicLink" class="text-blue-600 font-semibold hover:underline"></a>
+        <a id="subtopicLink" href="#" class="text-blue-600 font-semibold hover:underline"></a>
       </nav>
 
     </div>
@@ -68,8 +70,7 @@
   <section class="max-w-6xl mx-auto px-6 py-8">
     <div class="bg-white rounded-xl shadow overflow-hidden">
       <iframe 
-        id="appFrame"
-        src=""
+        src="app_code.html"
         style="width: 100%; height: calc(100vh - 200px); border: 0; display: block;"
       ></iframe>
     </div>
@@ -91,71 +92,54 @@
       mobileMenu.classList.toggle('hidden');
     });
 
-    // Read topic/subtopic/app from query string
-    const params = new URLSearchParams(window.location.search);
-    const topicId = params.get('topic');
-    const subtopicId = params.get('subtopic');
-    const appId = params.get('app');
-
+    // TOP NAVIGATION LOGIC
     let topics = [];
     let currentTopic = null;
     let currentSubtopic = null;
+    let currentAppPath = window.location.pathname.split('/').pop();
 
     fetch('../../../apps.json')
       .then(r => r.json())
       .then(data => {
         topics = data.topics || [];
         findCurrentLocation();
-        renderBreadcrumb();
-        loadIframe();
+        renderAppTopNav();
       });
 
     function findCurrentLocation() {
-      // If topic exists, find it
-      if (topicId) {
-        currentTopic = topics.find(t => t.id === topicId) || null;
-
-        if (currentTopic && subtopicId) {
-          currentSubtopic =
-            currentTopic.subtopics.find(s => s.id === subtopicId) || null;
+      for (const topic of topics) {
+        for (const sub of topic.subtopics) {
+          for (const app of sub.apps) {
+            if (app.path.endsWith(currentAppPath)) {
+              currentTopic = topic;
+              currentSubtopic = sub;
+              return;
+            }
+          }
         }
-      }
-
-      // Fallback defaults
-      if (!currentTopic) {
-        currentTopic = { id: "default", name: "Browse Topics" };
-      }
-      if (!currentSubtopic) {
-        currentSubtopic = { id: "default", name: "All Subtopics" };
       }
     }
 
-    function renderBreadcrumb() {
+    function renderAppTopNav() {
       const topicLink = document.getElementById('topicLink');
       const subtopicLink = document.getElementById('subtopicLink');
 
-      topicLink.textContent = currentTopic.name;
-      topicLink.href = "../../../topics.html";
+      if (!currentTopic || !currentSubtopic) {
+        topicLink.textContent = 'Unknown Topic';
+        subtopicLink.textContent = 'Unknown Subtopic';
+        subtopicLink.href = '../../../index.html';
+        return;
+      }
 
+      topicLink.textContent = currentTopic.name;
       subtopicLink.textContent = currentSubtopic.name;
 
-      // Deep link back to subtopic view
-      if (currentTopic.id !== "default" && currentSubtopic.id !== "default") {
-        subtopicLink.href =
-          "../../../topics.html?topic=" +
-          encodeURIComponent(currentTopic.id) +
-          "&subtopic=" +
-          encodeURIComponent(currentSubtopic.id);
-      } else {
-        subtopicLink.href = "../../../topics.html";
-      }
-    }
-
-    function loadIframe() {
-      const iframe = document.getElementById("appFrame");
-
-      iframe.src =
-        `app_code.html?topic=${encodeURIComponent(currentTopic.id)}&subtopic=${encodeURIComponent(currentSubtopic.id)}&app=${encodeURIComponent(appId || "")}`;
+      // Correct deep link back to subtopic
+      subtopicLink.href =
+        '../../../topics.html?topic=' +
+        encodeURIComponent(currentTopic.id) +
+        '&subtopic=' +
+        encodeURIComponent(currentSubtopic.id);
     }
   </script>
 
