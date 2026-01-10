@@ -53,14 +53,16 @@
     </nav>
   </header>
 
-  <!-- TOP NAVIGATION BAR -->
+  <!-- TOP NAVIGATION BAR (Topic › Subtopic) -->
   <section class="bg-white border-b shadow-sm">
     <div class="max-w-6xl mx-auto px-6 py-4">
 
       <nav class="text-sm text-gray-600 space-x-2">
-        <a id="topicLink" href="../../../topics.html" class="text-blue-600 font-semibold hover:underline"></a>
+        <a id="topicLink" href="../../../topics.html"
+           class="text-blue-600 font-semibold hover:underline"></a>
         <span>›</span>
-        <a id="subtopicLink" href="#" class="text-blue-600 font-semibold hover:underline"></a>
+        <a id="subtopicLink" href="#"
+           class="text-blue-600 font-semibold hover:underline"></a>
       </nav>
 
     </div>
@@ -92,11 +94,14 @@
       mobileMenu.classList.toggle('hidden');
     });
 
-    // TOP NAVIGATION LOGIC
+    // Read topic/subtopic from query string
+    const params = new URLSearchParams(window.location.search);
+    const topicIdFromUrl = params.get('topic');
+    const subtopicIdFromUrl = params.get('subtopic');
+
     let topics = [];
     let currentTopic = null;
     let currentSubtopic = null;
-    let currentAppPath = window.location.pathname.split('/').pop();
 
     fetch('../../../apps.json')
       .then(r => r.json())
@@ -107,17 +112,18 @@
       });
 
     function findCurrentLocation() {
-      for (const topic of topics) {
-        for (const sub of topic.subtopics) {
-          for (const app of sub.apps) {
-            if (app.path.endsWith(currentAppPath)) {
-              currentTopic = topic;
-              currentSubtopic = sub;
-              return;
-            }
-          }
+      // Prefer explicit IDs from URL if available
+      if (topicIdFromUrl) {
+        currentTopic = topics.find(t => t.id === topicIdFromUrl) || null;
+
+        if (currentTopic && subtopicIdFromUrl) {
+          currentSubtopic =
+            currentTopic.subtopics.find(s => s.id === subtopicIdFromUrl) || null;
         }
       }
+
+      // Fallback: if anything is missing, just leave null
+      // (you could add extra fallback logic here if you want)
     }
 
     function renderAppTopNav() {
@@ -125,16 +131,18 @@
       const subtopicLink = document.getElementById('subtopicLink');
 
       if (!currentTopic || !currentSubtopic) {
-        topicLink.textContent = 'Unknown Topic';
-        subtopicLink.textContent = 'Unknown Subtopic';
+        topicLink.textContent = 'Browse Topics';
+        topicLink.href = '../../../topics.html';
+        subtopicLink.textContent = 'All Subtopics';
         subtopicLink.href = '../../../topics.html';
         return;
       }
 
       topicLink.textContent = currentTopic.name;
-      subtopicLink.textContent = currentSubtopic.name;
+      topicLink.href = '../../../topics.html';
 
-      // Correct deep link back to subtopic
+      subtopicLink.textContent = currentSubtopic.name;
+      // Deep link back to this subtopic view
       subtopicLink.href =
         '../../../topics.html?topic=' +
         encodeURIComponent(currentTopic.id) +
