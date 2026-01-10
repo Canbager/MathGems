@@ -53,22 +53,15 @@
     </nav>
   </header>
 
-  <!-- TOP NAVIGATION BAR (Topic → Subtopic → Apps) -->
+  <!-- TOP NAVIGATION BAR -->
   <section class="bg-white border-b shadow-sm">
     <div class="max-w-6xl mx-auto px-6 py-4">
 
-      <!-- Back button -->
-      <a id="appBackButton"
-         href="../../../topics.html"
-         class="text-blue-600 font-semibold block mb-3">
-        ← Back to topics
-      </a>
-
-      <!-- Topic + Subtopic headings -->
-      <div id="appNavHeadings" class="mb-4"></div>
-
-      <!-- Horizontal app list -->
-      <div id="appNavList" class="flex flex-wrap gap-3"></div>
+      <nav class="text-sm text-gray-600 space-x-2">
+        <a id="topicLink" href="../../../topics.html" class="text-blue-600 font-semibold hover:underline"></a>
+        <span>›</span>
+        <a id="subtopicLink" href="#" class="text-blue-600 font-semibold hover:underline"></a>
+      </nav>
 
     </div>
   </section>
@@ -99,7 +92,7 @@
       mobileMenu.classList.toggle('hidden');
     });
 
-    // TOP NAV LOGIC
+    // TOP NAVIGATION LOGIC
     let topics = [];
     let currentTopic = null;
     let currentSubtopic = null;
@@ -110,7 +103,7 @@
       .then(data => {
         topics = data.topics || [];
         findCurrentLocation();
-        renderAppTopMenu();
+        renderAppTopNav();
       });
 
     function findCurrentLocation() {
@@ -127,39 +120,22 @@
       }
     }
 
-    function renderAppTopMenu() {
-      const headings = document.getElementById('appNavHeadings');
-      const list = document.getElementById('appNavList');
-
-      headings.innerHTML = '';
-      list.innerHTML = '';
+    function renderAppTopNav() {
+      const topicLink = document.getElementById('topicLink');
+      const subtopicLink = document.getElementById('subtopicLink');
 
       if (!currentTopic || !currentSubtopic) {
-        headings.innerHTML = '<p class="text-gray-500">Navigation unavailable</p>';
+        topicLink.textContent = 'Unknown Topic';
+        subtopicLink.textContent = 'Unknown Subtopic';
+        subtopicLink.href = '../../../topics.html';
         return;
       }
 
-      // Topic + Subtopic labels
-      headings.innerHTML = `
-        <div class="text-sm text-gray-600">
-          <span class="font-semibold">${currentTopic.name}</span>
-          <span class="mx-2">›</span>
-          <span class="font-semibold">${currentSubtopic.name}</span>
-        </div>
-      `;
+      topicLink.textContent = currentTopic.name;
+      subtopicLink.textContent = currentSubtopic.name;
 
-      // Horizontal list of apps
-      currentSubtopic.apps.forEach(app => {
-        const btn = document.createElement('a');
-        btn.href = app.path;
-        btn.className =
-          'px-4 py-2 rounded border text-sm ' +
-          (app.path.endsWith(currentAppPath)
-            ? 'bg-blue-100 border-blue-300 font-semibold'
-            : 'bg-white border-gray-300 hover:bg-gray-100');
-        btn.textContent = app.title;
-        list.appendChild(btn);
-      });
+      // Subtopic link returns to topic view
+      subtopicLink.href = '../../../topics.html?topic=' + encodeURIComponent(currentTopic.id);
     }
   </script>
 
