@@ -43,16 +43,41 @@
   </header>
 
   <!-- PAGE HEADER -->
-  <section class="max-w-5xl mx-auto px-6 py-16 text-center">
+  <section class="max-w-5xl mx-auto px-6 py-12 text-center">
     <h1 id="pageTitle" class="text-4xl font-bold mb-4">Browse Topics</h1>
     <p id="pageSubtitle" class="text-gray-600 text-lg">
       Explore interactive math tools across algebra, number, geometry, and more.
     </p>
   </section>
 
-  <!-- GRID -->
+  <!-- MAIN LAYOUT -->
   <section class="max-w-6xl mx-auto px-6 pb-20">
-    <div id="appsGrid" class="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"></div>
+    <div class="grid grid-cols-4 gap-8">
+
+      <!-- LEFT COLUMN -->
+      <aside class="col-span-1 bg-white rounded-xl shadow p-4 space-y-4">
+
+        <a id="backButton"
+           href="topics.html"
+           class="block text-blue-600 font-semibold mb-4">
+          ← Go Back
+        </a>
+
+        <div id="topicList" class="space-y-2">
+          <!-- Topics injected here -->
+        </div>
+
+      </aside>
+
+      <!-- RIGHT PANEL -->
+      <main class="col-span-3">
+        <h2 id="panelTitle" class="text-2xl font-bold mb-6"></h2>
+        <div id="appsGrid" class="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+          <!-- Dynamic content injected here -->
+        </div>
+      </main>
+
+    </div>
   </section>
 
   <!-- FOOTER -->
@@ -71,45 +96,51 @@
     fetch('apps.json')
       .then(r => r.json())
       .then(data => {
+        renderLeftColumn(data.topics);
+
         const topicId = getParam("topic");
         const subtopicId = getParam("subtopic");
 
         if (!topicId) {
-          renderTopics(data.topics);
+          renderRight_Topics();
         } else if (topicId && !subtopicId) {
           const topic = data.topics.find(t => t.id === topicId);
-          renderSubtopics(topic);
+          renderRight_Subtopics(topic);
         } else {
           const topic = data.topics.find(t => t.id === topicId);
           const subtopic = topic.subtopics.find(s => s.id === subtopicId);
-          renderApps(subtopic);
+          renderRight_Apps(subtopic);
         }
       });
 
-    function renderTopics(topics) {
-      document.getElementById("pageTitle").textContent = "Browse Topics";
-      document.getElementById("pageSubtitle").textContent = "Choose a topic to explore its subtopics.";
-
-      const grid = document.getElementById("appsGrid");
-      grid.innerHTML = "";
+    /* LEFT COLUMN */
+    function renderLeftColumn(topics) {
+      const list = document.getElementById("topicList");
+      list.innerHTML = "";
 
       topics.forEach(t => {
-        const card = document.createElement("a");
-        card.href = `topics.html?topic=${t.id}`;
-        card.className = "block bg-white rounded-xl shadow hover:shadow-lg transition p-6";
-
-        card.innerHTML = `
-          <h3 class="text-xl font-bold mb-2">${t.name}</h3>
-          <p class="text-gray-600">${t.subtopics.length} subtopics</p>
-        `;
-
-        grid.appendChild(card);
+        const link = document.createElement("a");
+        link.href = `topics.html?topic=${t.id}`;
+        link.className = "block px-3 py-2 rounded hover:bg-gray-100";
+        link.textContent = t.name;
+        list.appendChild(link);
       });
+
+      const topicId = getParam("topic");
+      const back = document.getElementById("backButton");
+      back.style.display = topicId ? "block" : "none";
     }
 
-    function renderSubtopics(topic) {
-      document.getElementById("pageTitle").textContent = topic.name;
-      document.getElementById("pageSubtitle").textContent = "Choose a subtopic to explore its apps.";
+    /* RIGHT PANEL — TOPICS */
+    function renderRight_Topics() {
+      document.getElementById("panelTitle").textContent = "Choose a Topic";
+      document.getElementById("appsGrid").innerHTML =
+        `<p class="text-gray-600">Select a topic from the left to begin.</p>`;
+    }
+
+    /* RIGHT PANEL — SUBTOPICS */
+    function renderRight_Subtopics(topic) {
+      document.getElementById("panelTitle").textContent = topic.name;
 
       const grid = document.getElementById("appsGrid");
       grid.innerHTML = "";
@@ -128,9 +159,9 @@
       });
     }
 
-    function renderApps(subtopic) {
-      document.getElementById("pageTitle").textContent = subtopic.name;
-      document.getElementById("pageSubtitle").textContent = "Choose an app to explore.";
+    /* RIGHT PANEL — APPS */
+    function renderRight_Apps(subtopic) {
+      document.getElementById("panelTitle").textContent = subtopic.name;
 
       const grid = document.getElementById("appsGrid");
       grid.innerHTML = "";
