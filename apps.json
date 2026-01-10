@@ -3,42 +3,42 @@
     "title": "Quadratics — Error Analysis",
     "description": "Investigate common mistakes and deepen conceptual understanding.",
     "path": "apps/algebra/quadratic/index.html",
-    "preview": "apps/quadratics-error-analysis/preview.jpg",
+    "preview": "apps/algebra/quadratic/preview.jpg",
     "topic": "Algebra"
   },
   {
     "title": "simultaneous_elimination",
     "description": "simultaneous_elimination",
     "path": "apps/algebra/simultaneous_elimination/index.html",
-    "preview": "apps/algebra-tiles/preview.jpg",
+    "preview": "apps/algebra/simultaneous_elimination/preview.jpg",
     "topic": "Algebra"
   }
   {
     "title": "quadratic_formula",
     "description": "quadratic_formula",
     "path": "apps/algebra/quadratic_formula/index.html",
-    "preview": "apps/algebra-tiles/preview.jpg",
+    "preview": "apps/algebra/quadratic_formula/preview.jpg",
     "topic": "Algebra"
   }
   {
     "title": "simultaneous_quadratic",
     "description": "simultaneous_quadratic",
     "path": "apps/algebra/simultaneous_quadratic/index.html",
-    "preview": "apps/algebra-tiles/preview.jpg",
+    "preview": "apps/algebra/simultaneous_quadratic/preview.jpg",
     "topic": "Algebra"
   }
   {
     "title": "completing_the_square",
     "description": "completing_the_square",
     "path": "apps/algebra/completing_the_square/index.html",
-    "preview": "apps/algebra-tiles/preview.jpg",
+    "preview": "apps/algebra/completing_the_square/preview.jpg",
     "topic": "Algebra"
   }
   {
     "title": "recurring_decimals",
     "description": "recurring_decimals",
-    "path": "apps/algebra/recurring_decimals/index.html",
-    "preview": "apps/algebra-tiles/preview.jpg",
+    "path": "apps/number/recurring_decimals/index.html",
+    "preview": "apps/number/recurring_decimals/preview.jpg",
     "topic": "Number"
   }
 ]
