@@ -17,13 +17,14 @@
 
 <body class="bg-gray-50 text-gray-800">
 
-  <!-- NAVBAR (fully consistent with index.html) -->
+  <!-- NAVBAR -->
   <header class="bg-white shadow-sm">
     <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
 
       <!-- Left: logo + title -->
       <div class="flex items-center space-x-3">
-        <img src="../../../img/mathgems_logo.jpeg" alt="Math Gems logo" style="height:6.5rem" class="w-auto mb-6 md:mb-0">
+        <img src="../../../img/mathgems_logo.jpeg" alt="Math Gems logo"
+             style="height:6.5rem" class="w-auto mb-6 md:mb-0">
         <span class="text-2xl font-bold text-gray-900">
           Math<span class="text-blue-600">Gems</span>
         </span>
@@ -52,20 +53,28 @@
     </nav>
   </header>
 
-  <!-- APP CONTENT -->
-  <section class="max-w-6xl mx-auto px-0 py-10">
-    <div class="bg-white rounded-xl shadow overflow-hidden">
+  <!-- MAIN CONTENT -->
+  <section class="max-w-6xl mx-auto px-6 py-10">
+    <div class="flex flex-col lg:flex-row gap-8">
 
-      <!-- FULL-SIZE APP WINDOW -->
-      <iframe 
-        src="app_code.html"
-        style="
-          width: 100%;
-          height: calc(100vh + 180px);
-          border: 0;
-          display: block;
-        "
-      ></iframe>
+      <!-- LEFT SIDE MENU -->
+      <aside class="lg:w-1/4 bg-white rounded-xl shadow p-4 space-y-4">
+        <a id="appBackButton"
+           href="../../../topics.html"
+           class="block text-blue-600 font-semibold mb-2">
+          ← Back to topics
+        </a>
+
+        <div id="appNavList" class="space-y-2"></div>
+      </aside>
+
+      <!-- RIGHT: APP WINDOW -->
+      <main class="lg:w-3/4 bg-white rounded-xl shadow overflow-hidden">
+        <iframe 
+          src="app_code.html"
+          style="width: 100%; height: calc(100vh - 120px); border: 0; display: block;"
+        ></iframe>
+      </main>
 
     </div>
   </section>
@@ -77,13 +86,75 @@
     </div>
   </footer>
 
-  <!-- MOBILE MENU SCRIPT -->
+  <!-- SCRIPT -->
   <script>
+    // MOBILE MENU
     const menuBtn = document.getElementById('menuBtn');
     const mobileMenu = document.getElementById('mobileMenu');
     menuBtn.addEventListener('click', () => {
       mobileMenu.classList.toggle('hidden');
     });
+
+    // SIDE MENU LOGIC
+    let topics = [];
+    let currentTopic = null;
+    let currentSubtopic = null;
+    let currentAppPath = window.location.pathname.split('/').pop();
+
+    fetch('../../../apps.json')
+      .then(r => r.json())
+      .then(data => {
+        topics = data.topics || [];
+        findCurrentLocation();
+        renderAppSideMenu();
+      });
+
+    function findCurrentLocation() {
+      for (const topic of topics) {
+        for (const sub of topic.subtopics) {
+          for (const app of sub.apps) {
+            if (app.path.endsWith(currentAppPath)) {
+              currentTopic = topic;
+              currentSubtopic = sub;
+              return;
+            }
+          }
+        }
+      }
+    }
+
+    function renderAppSideMenu() {
+      const list = document.getElementById('appNavList');
+      list.innerHTML = '';
+
+      if (!currentTopic || !currentSubtopic) {
+        list.innerHTML = '<p class="text-gray-500">Navigation unavailable</p>';
+        return;
+      }
+
+      // Topic heading
+      const topicHeading = document.createElement('div');
+      topicHeading.className = 'text-sm font-semibold text-gray-500 px-1 pb-2';
+      topicHeading.textContent = currentTopic.name;
+      list.appendChild(topicHeading);
+
+      // Subtopic heading
+      const subHeading = document.createElement('div');
+      subHeading.className = 'text-sm font-semibold text-gray-500 px-1 pb-2';
+      subHeading.textContent = currentSubtopic.name;
+      list.appendChild(subHeading);
+
+      // App list
+      currentSubtopic.apps.forEach(app => {
+        const btn = document.createElement('a');
+        btn.href = app.path;
+        btn.className =
+          'block px-3 py-2 rounded hover:bg-gray-100 ' +
+          (app.path.endsWith(currentAppPath) ? 'bg-blue-100 font-semibold' : '');
+        btn.textContent = app.title;
+        list.appendChild(btn);
+      });
+    }
   </script>
 
 </body>
