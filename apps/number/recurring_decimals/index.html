@@ -137,26 +137,35 @@
       }
     }
 
-    function renderAppTopNav() {
+
+  function renderAppTopNav() {
       const topicLink = document.getElementById('topicLink');
       const subtopicLink = document.getElementById('subtopicLink');
 
       if (!currentTopic || !currentSubtopic) {
-        topicLink.textContent = 'MathGems'; // Default text
+        topicLink.textContent = 'MathGems';
         subtopicLink.textContent = '';
         return;
       }
 
+      // 1. Set Topic Text
       topicLink.textContent = currentTopic.name;
+      
+      // FIX: Update Topic Link to include the topic ID
+      // This ensures index.html opens the correct Topic accordion
+      topicLink.href = '../../../index.html?topic=' + encodeURIComponent(currentTopic.id);
+
+      // 2. Set Subtopic Text
       subtopicLink.textContent = currentSubtopic.name;
 
-      // Deep link back to homepage with correct state
+      // 3. Set Subtopic Link (already correct)
       subtopicLink.href =
         '../../../index.html?topic=' +
         encodeURIComponent(currentTopic.id) +
         '&subtopic=' +
         encodeURIComponent(currentSubtopic.id);
     }
+   
 </script>
 
 </body>
