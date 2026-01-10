@@ -137,8 +137,7 @@
       }
     }
 
-
-  function renderAppTopNav() {
+   function renderAppTopNav() {
       const topicLink = document.getElementById('topicLink');
       const subtopicLink = document.getElementById('subtopicLink');
 
@@ -148,24 +147,24 @@
         return;
       }
 
-      // 1. Set Topic Text
+      // 1. Set Topic Name
       topicLink.textContent = currentTopic.name;
       
-      // FIX: Update Topic Link to include the topic ID
-      // This ensures index.html opens the correct Topic accordion
+      // 2. CRITICAL FIX: Add the ?topic= ID to the Topic Link
+      // This tells index.html which folder to open
       topicLink.href = '../../../index.html?topic=' + encodeURIComponent(currentTopic.id);
 
-      // 2. Set Subtopic Text
+      // 3. Set Subtopic Name
       subtopicLink.textContent = currentSubtopic.name;
 
-      // 3. Set Subtopic Link (already correct)
+      // 4. Set Subtopic Link
       subtopicLink.href =
         '../../../index.html?topic=' +
         encodeURIComponent(currentTopic.id) +
         '&subtopic=' +
         encodeURIComponent(currentSubtopic.id);
     }
-   
+
 </script>
 
 </body>
