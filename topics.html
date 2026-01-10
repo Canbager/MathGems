@@ -3,11 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Browse Topics — MathGems</title>
+  <title>MathGems App</title>
 
+  <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- Inter Font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Global Styles -->
+  <link rel="stylesheet" href="../../../css/styles.css">
 </head>
 
 <body class="bg-gray-50 text-gray-800">
@@ -15,20 +20,24 @@
   <!-- NAVBAR -->
   <header class="bg-white shadow-sm">
     <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+
+      <!-- Left: logo + title -->
       <div class="flex items-center space-x-3">
-        <img src="img/mathgems_logo.jpeg" alt="Math Gems logo"
+        <img src="../../../img/mathgems_logo.jpeg" alt="Math Gems logo"
              style="height:6.5rem" class="w-auto mb-6 md:mb-0">
         <span class="text-2xl font-bold text-gray-900">
           Math<span class="text-blue-600">Gems</span>
         </span>
       </div>
 
+      <!-- Desktop Nav -->
       <nav class="hidden md:flex space-x-6">
-        <a href="index.html" class="text-gray-700 hover:text-blue-600">Home</a>
-        <a href="topics.html" class="text-blue-600 font-semibold">Browse Topics</a>
+        <a href="../../../index.html" class="text-gray-700 hover:text-blue-600">Home</a>
+        <a href="../../../topics.html" class="text-gray-700 hover:text-blue-600">Browse Topics</a>
       </nav>
     </div>
 
+    <!-- Mobile Menu Button -->
     <button id="menuBtn" class="md:hidden focus:outline-none px-6 py-4">
       <svg class="w-7 h-7 text-gray-700" fill="none" stroke="currentColor" stroke-width="2"
            viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
@@ -36,45 +45,36 @@
       </svg>
     </button>
 
+    <!-- Mobile Menu Panel -->
     <nav id="mobileMenu"
          class="md:hidden hidden flex-col bg-white border-t border-gray-200 px-6 py-4 space-y-4">
-      <a href="index.html" class="block text-gray-700 hover:text-blue-600">Home</a>
-      <a href="topics.html" class="block text-blue-600 font-semibold">Browse Topics</a>
+      <a href="../../../index.html" class="block text-gray-700 hover:text-blue-600">Home</a>
+      <a href="../../../topics.html" class="block text-gray-700 hover:text-blue-600">Browse Topics</a>
     </nav>
   </header>
 
-  <!-- PAGE HEADER -->
-  <section class="max-w-5xl mx-auto px-6 py-12 text-center">
-    <h1 class="text-4xl font-bold mb-4">Browse Topics</h1>
-    <p class="text-gray-600 text-lg">
-      Explore interactive math tools across algebra, number, geometry, and more.
-    </p>
+  <!-- TOP NAVIGATION BAR (Topic › Subtopic) -->
+  <section class="bg-white border-b shadow-sm">
+    <div class="max-w-6xl mx-auto px-6 py-4">
+
+      <nav class="text-sm text-gray-600 space-x-2">
+        <a id="topicLink" href="../../../topics.html"
+           class="text-blue-600 font-semibold hover:underline"></a>
+        <span>›</span>
+        <a id="subtopicLink" href="#"
+           class="text-blue-600 font-semibold hover:underline"></a>
+      </nav>
+
+    </div>
   </section>
 
-  <!-- MAIN LAYOUT -->
-  <section class="max-w-6xl mx-auto px-6 pb-20">
-    <div class="grid grid-cols-4 gap-8">
-
-      <!-- LEFT COLUMN -->
-      <aside class="col-span-1 bg-white rounded-xl shadow p-4 space-y-4">
-        <a id="backButton"
-           href="#"
-           class="block text-blue-600 font-semibold mb-2 hidden">
-          ← Return
-        </a>
-        <div id="topicList" class="space-y-2">
-          <!-- Topics OR subtopics injected here -->
-        </div>
-      </aside>
-
-      <!-- RIGHT PANEL -->
-      <main class="col-span-3">
-        <h2 id="panelTitle" class="text-2xl font-bold mb-6"></h2>
-        <div id="appsGrid" class="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-          <!-- Subtopic cards OR app cards injected here -->
-        </div>
-      </main>
-
+  <!-- APP WINDOW -->
+  <section class="max-w-6xl mx-auto px-6 py-8">
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+      <iframe 
+        src="app_code.html"
+        style="width: 100%; height: calc(100vh - 200px); border: 0; display: block;"
+      ></iframe>
     </div>
   </section>
 
@@ -87,141 +87,68 @@
 
   <!-- SCRIPT -->
   <script>
-    function getParam(name) {
-      return new URLSearchParams(window.location.search).get(name);
-    }
+    // MOBILE MENU
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    menuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
 
-    fetch('apps.json')
+    // Read topic/subtopic from query string
+    const params = new URLSearchParams(window.location.search);
+    const topicIdFromUrl = params.get('topic');
+    const subtopicIdFromUrl = params.get('subtopic');
+
+    let topics = [];
+    let currentTopic = null;
+    let currentSubtopic = null;
+
+    fetch('../../../apps.json')
       .then(r => r.json())
       .then(data => {
-        const topics = data.topics || [];
-
-        let topicId = getParam("topic");
-        const subtopicId = getParam("subtopic");
-
-        // Default: if no topic in URL, use the first topic
-        if (!topicId && topics.length > 0) {
-          topicId = topics[0].id;
-        }
-
-        const currentTopic = topics.find(t => t.id === topicId) || topics[0];
-
-        if (subtopicId) {
-          const currentSubtopic = currentTopic.subtopics.find(s => s.id === subtopicId);
-          renderLeftForSubtopicMode(currentTopic, currentSubtopic);
-          renderApps(currentSubtopic);
-        } else {
-          renderLeftForTopicMode(topics, currentTopic);
-          renderSubtopics(currentTopic);
-        }
+        topics = data.topics || [];
+        findCurrentLocation();
+        renderAppTopNav();
       });
 
-    // LEFT COLUMN — TOPIC MODE
-    function renderLeftForTopicMode(topics, currentTopic) {
-      const list = document.getElementById("topicList");
-      const back = document.getElementById("backButton");
-      list.innerHTML = "";
-      back.classList.add("hidden");
+    function findCurrentLocation() {
+      // Prefer explicit IDs from URL if available
+      if (topicIdFromUrl) {
+        currentTopic = topics.find(t => t.id === topicIdFromUrl) || null;
 
-      topics.forEach(t => {
-        const link = document.createElement("a");
-        link.href = `topics.html?topic=${t.id}`;
-        link.className =
-          "block px-3 py-2 rounded hover:bg-gray-100" +
-          (currentTopic && currentTopic.id === t.id ? " bg-blue-100 font-semibold" : "");
-        link.textContent = t.name;
-        list.appendChild(link);
-      });
+        if (currentTopic && subtopicIdFromUrl) {
+          currentSubtopic =
+            currentTopic.subtopics.find(s => s.id === subtopicIdFromUrl) || null;
+        }
+      }
+
+      // Fallback: if anything is missing, just leave null
+      // (you could add extra fallback logic here if you want)
     }
 
-    // LEFT COLUMN — SUBTOPIC MODE
-    function renderLeftForSubtopicMode(topic, currentSubtopic) {
-      const list = document.getElementById("topicList");
-      const back = document.getElementById("backButton");
-      list.innerHTML = "";
+    function renderAppTopNav() {
+      const topicLink = document.getElementById('topicLink');
+      const subtopicLink = document.getElementById('subtopicLink');
 
-      back.classList.remove("hidden");
-      back.href = `topics.html?topic=${topic.id}`;
-
-      const heading = document.createElement("div");
-      heading.className = "text-sm font-semibold text-gray-500 px-3 pb-2";
-      heading.textContent = topic.name;
-      list.appendChild(heading);
-
-      topic.subtopics.forEach(st => {
-        const link = document.createElement("a");
-        link.href = `topics.html?topic=${topic.id}&subtopic=${st.id}`;
-        link.className =
-          "block px-3 py-2 rounded hover:bg-gray-100" +
-          (currentSubtopic && currentSubtopic.id === st.id ? " bg-blue-100 font-semibold" : "");
-        link.textContent = st.name;
-        list.appendChild(link);
-      });
-    }
-
-    // RIGHT PANEL — SHOW SUBTOPICS OF CURRENT TOPIC
-    function renderSubtopics(topic) {
-      const titleEl = document.getElementById("panelTitle");
-      const grid = document.getElementById("appsGrid");
-
-      titleEl.textContent = topic ? topic.name : "Topics";
-      grid.innerHTML = "";
-
-      if (!topic || !topic.subtopics || topic.subtopics.length === 0) {
-        grid.innerHTML = `<p class="text-gray-600">No subtopics available yet.</p>`;
+      if (!currentTopic || !currentSubtopic) {
+        topicLink.textContent = 'Browse Topics';
+        topicLink.href = '../../../topics.html';
+        subtopicLink.textContent = 'All Subtopics';
+        subtopicLink.href = '../../../topics.html';
         return;
       }
 
-      topic.subtopics.forEach(st => {
-        const card = document.createElement("a");
-        card.href = `topics.html?topic=${topic.id}&subtopic=${st.id}`;
-        card.className = "block bg-white rounded-xl shadow hover:shadow-lg transition p-6";
+      topicLink.textContent = currentTopic.name;
+      topicLink.href = '../../../topics.html';
 
-        card.innerHTML = `
-          <h3 class="text-xl font-bold mb-2">${st.name}</h3>
-          <p class="text-gray-600">${st.apps.length} apps</p>
-        `;
-
-        grid.appendChild(card);
-      });
+      subtopicLink.textContent = currentSubtopic.name;
+      // Deep link back to this subtopic view
+      subtopicLink.href =
+        '../../../topics.html?topic=' +
+        encodeURIComponent(currentTopic.id) +
+        '&subtopic=' +
+        encodeURIComponent(currentSubtopic.id);
     }
-
-    // RIGHT PANEL — SHOW APPS OF CURRENT SUBTOPIC
-    function renderApps(subtopic) {
-      const titleEl = document.getElementById("panelTitle");
-      const grid = document.getElementById("appsGrid");
-
-      titleEl.textContent = subtopic ? subtopic.name : "Apps";
-      grid.innerHTML = "";
-
-      if (!subtopic || !subtopic.apps || subtopic.apps.length === 0) {
-        grid.innerHTML = `<p class="text-gray-600">No apps available yet.</p>`;
-        return;
-      }
-
-      subtopic.apps.forEach(app => {
-        const card = document.createElement("a");
-        card.href = app.path;
-        card.className = "block bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden";
-
-        card.innerHTML = `
-          <div class="h-48 flex items-center justify-center bg-gray-100">
-            <img src="${app.preview}" class="max-h-full object-contain" alt="${app.title} preview">
-          </div>
-          <div class="p-5">
-            <h3 class="text-lg font-bold mb-2">${app.title}</h3>
-            <p class="text-gray-600 text-sm">${app.description}</p>
-          </div>
-        `;
-
-        grid.appendChild(card);
-      });
-    }
-
-    // MOBILE MENU
-    document.getElementById("menuBtn").addEventListener("click", () => {
-      document.getElementById("mobileMenu").classList.toggle("hidden");
-    });
   </script>
 
 </body>
