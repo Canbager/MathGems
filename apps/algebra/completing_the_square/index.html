@@ -134,8 +134,12 @@
       topicLink.textContent = currentTopic.name;
       subtopicLink.textContent = currentSubtopic.name;
 
-      // Subtopic link returns to topic view
-      subtopicLink.href = '../../../topics.html?topic=' + encodeURIComponent(currentTopic.id);
+      // Correct deep link back to subtopic
+      subtopicLink.href =
+        '../../../topics.html?topic=' +
+        encodeURIComponent(currentTopic.id) +
+        '&subtopic=' +
+        encodeURIComponent(currentSubtopic.id);
     }
   </script>
 
