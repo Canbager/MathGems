@@ -137,26 +137,34 @@
       }
     }
 
-    function renderAppTopNav() {
+   function renderAppTopNav() {
       const topicLink = document.getElementById('topicLink');
       const subtopicLink = document.getElementById('subtopicLink');
 
       if (!currentTopic || !currentSubtopic) {
-        topicLink.textContent = 'MathGems'; // Default text
+        topicLink.textContent = 'MathGems';
         subtopicLink.textContent = '';
         return;
       }
 
+      // 1. Set Topic Name
       topicLink.textContent = currentTopic.name;
+      
+      // 2. CRITICAL FIX: Add the ?topic= ID to the Topic Link
+      // This tells index.html which folder to open
+      topicLink.href = '../../../index.html?topic=' + encodeURIComponent(currentTopic.id);
+
+      // 3. Set Subtopic Name
       subtopicLink.textContent = currentSubtopic.name;
 
-      // Deep link back to homepage with correct state
+      // 4. Set Subtopic Link
       subtopicLink.href =
         '../../../index.html?topic=' +
         encodeURIComponent(currentTopic.id) +
         '&subtopic=' +
         encodeURIComponent(currentSubtopic.id);
     }
+
 </script>
 
 </body>
