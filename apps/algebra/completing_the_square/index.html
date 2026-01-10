@@ -21,7 +21,6 @@
   <header class="bg-white shadow-sm">
     <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
 
-      <!-- Left: logo + title -->
       <div class="flex items-center space-x-3">
         <img src="../../../img/mathgems_logo.jpeg" alt="Math Gems logo"
              style="height:6.5rem" class="w-auto mb-6 md:mb-0">
@@ -30,7 +29,6 @@
         </span>
       </div>
 
-      <!-- Desktop Nav -->
       <nav class="hidden md:flex space-x-6">
         <a href="../../../index.html" class="text-gray-700 hover:text-blue-600">Home</a>
         <a href="../../../topics.html" class="text-gray-700 hover:text-blue-600">Browse Topics</a>
@@ -58,11 +56,9 @@
     <div class="max-w-6xl mx-auto px-6 py-4">
 
       <nav class="text-sm text-gray-600 space-x-2">
-        <a id="topicLink" href="../../../topics.html"
-           class="text-blue-600 font-semibold hover:underline"></a>
+        <a id="topicLink" class="text-blue-600 font-semibold hover:underline"></a>
         <span>›</span>
-        <a id="subtopicLink" href="#"
-           class="text-blue-600 font-semibold hover:underline"></a>
+        <a id="subtopicLink" class="text-blue-600 font-semibold hover:underline"></a>
       </nav>
 
     </div>
@@ -72,7 +68,8 @@
   <section class="max-w-6xl mx-auto px-6 py-8">
     <div class="bg-white rounded-xl shadow overflow-hidden">
       <iframe 
-        src="app_code.html"
+        id="appFrame"
+        src=""
         style="width: 100%; height: calc(100vh - 200px); border: 0; display: block;"
       ></iframe>
     </div>
@@ -94,10 +91,11 @@
       mobileMenu.classList.toggle('hidden');
     });
 
-    // Read topic/subtopic from query string
+    // Read topic/subtopic/app from query string
     const params = new URLSearchParams(window.location.search);
-    const topicIdFromUrl = params.get('topic');
-    const subtopicIdFromUrl = params.get('subtopic');
+    const topicId = params.get('topic');
+    const subtopicId = params.get('subtopic');
+    const appId = params.get('app');
 
     let topics = [];
     let currentTopic = null;
@@ -108,46 +106,56 @@
       .then(data => {
         topics = data.topics || [];
         findCurrentLocation();
-        renderAppTopNav();
+        renderBreadcrumb();
+        loadIframe();
       });
 
     function findCurrentLocation() {
-      // Prefer explicit IDs from URL if available
-      if (topicIdFromUrl) {
-        currentTopic = topics.find(t => t.id === topicIdFromUrl) || null;
+      // If topic exists, find it
+      if (topicId) {
+        currentTopic = topics.find(t => t.id === topicId) || null;
 
-        if (currentTopic && subtopicIdFromUrl) {
+        if (currentTopic && subtopicId) {
           currentSubtopic =
-            currentTopic.subtopics.find(s => s.id === subtopicIdFromUrl) || null;
+            currentTopic.subtopics.find(s => s.id === subtopicId) || null;
         }
       }
 
-      // Fallback: if anything is missing, just leave null
-      // (you could add extra fallback logic here if you want)
+      // Fallback defaults
+      if (!currentTopic) {
+        currentTopic = { id: "default", name: "Browse Topics" };
+      }
+      if (!currentSubtopic) {
+        currentSubtopic = { id: "default", name: "All Subtopics" };
+      }
     }
 
-    function renderAppTopNav() {
+    function renderBreadcrumb() {
       const topicLink = document.getElementById('topicLink');
       const subtopicLink = document.getElementById('subtopicLink');
 
-      if (!currentTopic || !currentSubtopic) {
-        topicLink.textContent = 'Browse Topics';
-        topicLink.href = '../../../topics.html';
-        subtopicLink.textContent = 'All Subtopics';
-        subtopicLink.href = '../../../topics.html';
-        return;
-      }
-
       topicLink.textContent = currentTopic.name;
-      topicLink.href = '../../../topics.html';
+      topicLink.href = "../../../topics.html";
 
       subtopicLink.textContent = currentSubtopic.name;
-      // Deep link back to this subtopic view
-      subtopicLink.href =
-        '../../../topics.html?topic=' +
-        encodeURIComponent(currentTopic.id) +
-        '&subtopic=' +
-        encodeURIComponent(currentSubtopic.id);
+
+      // Deep link back to subtopic view
+      if (currentTopic.id !== "default" && currentSubtopic.id !== "default") {
+        subtopicLink.href =
+          "../../../topics.html?topic=" +
+          encodeURIComponent(currentTopic.id) +
+          "&subtopic=" +
+          encodeURIComponent(currentSubtopic.id);
+      } else {
+        subtopicLink.href = "../../../topics.html";
+      }
+    }
+
+    function loadIframe() {
+      const iframe = document.getElementById("appFrame");
+
+      iframe.src =
+        `app_code.html?topic=${encodeURIComponent(currentTopic.id)}&subtopic=${encodeURIComponent(currentSubtopic.id)}&app=${encodeURIComponent(appId || "")}`;
     }
   </script>
 
