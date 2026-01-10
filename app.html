@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
   <!-- Global Styles -->
-  <link rel="stylesheet" href="../../../css/styles.css">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 
 <body class="bg-gray-50 text-gray-800">
@@ -23,7 +23,7 @@
 
       <!-- Left: logo + title -->
       <div class="flex items-center space-x-3">
-        <img src="../../../img/mathgems_logo.jpeg" alt="Math Gems logo"
+        <img src="img/mathgems_logo.jpeg" alt="Math Gems logo"
              style="height:6.5rem" class="w-auto mb-6 md:mb-0">
         <span class="text-2xl font-bold text-gray-900">
           Math<span class="text-blue-600">Gems</span>
@@ -32,7 +32,7 @@
 
       <!-- Desktop Nav -->
       <nav class="hidden md:flex space-x-6">
-        <a href="../../../index.html" class="text-gray-700 hover:text-blue-600">Home</a>
+        <a href="index.html" class="text-gray-700 hover:text-blue-600">Home</a>
       </nav>
     </div>
 
@@ -47,7 +47,7 @@
     <!-- Mobile Menu Panel -->
     <nav id="mobileMenu"
          class="md:hidden hidden flex-col bg-white border-t border-gray-200 px-6 py-4 space-y-4">
-      <a href="../../../index.html" class="block text-gray-700 hover:text-blue-600">Home</a>
+      <a href="index.html" class="block text-gray-700 hover:text-blue-600">Home</a>
     </nav>
   </header>
 
@@ -56,7 +56,7 @@
     <div class="max-w-6xl mx-auto px-6 py-4">
 
       <nav class="text-sm text-gray-600 space-x-2">
-        <a id="topicLink" href="../../../index.html" class="text-blue-600 font-semibold hover:underline"></a>
+        <a id="topicLink" href="index.html" class="text-blue-600 font-semibold hover:underline"></a>
         <span>›</span>
         <a id="subtopicLink" href="#" class="text-blue-600 font-semibold hover:underline"></a>
       </nav>
@@ -81,8 +81,7 @@
     </div>
   </footer>
 
-  <!-- SCRIPT -->
-  <script>
+ <script>
     // MOBILE MENU
     const menuBtn = document.getElementById('menuBtn');
     const mobileMenu = document.getElementById('mobileMenu');
@@ -94,9 +93,14 @@
     let topics = [];
     let currentTopic = null;
     let currentSubtopic = null;
-    let currentAppPath = window.location.pathname.split('/').pop();
 
-    fetch('../../../apps.json')
+    // FIX: Get the folder name instead of just 'index.html'
+    // This grabs the second-to-last item in the path: 'simultaneous_elimination'
+    const pathParts = window.location.pathname.split('/');
+    // Handle cases with or without trailing slash, though usually it's .../folder/index.html
+    const currentFolder = pathParts[pathParts.length - 2]; 
+
+    fetch('apps.json')
       .then(r => r.json())
       .then(data => {
         topics = data.topics || [];
@@ -105,10 +109,25 @@
       });
 
     function findCurrentLocation() {
+      // 1. Try to find via URL params first (Most reliable if links are generated correctly)
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramTopicId = urlParams.get('topic');
+      const paramSubId = urlParams.get('subtopic');
+
+      if (paramTopicId && paramSubId) {
+        currentTopic = topics.find(t => t.id === paramTopicId);
+        if (currentTopic) {
+          currentSubtopic = currentTopic.subtopics.find(s => s.id === paramSubId);
+        }
+        if (currentTopic && currentSubtopic) return; // Found it!
+      }
+
+      // 2. Fallback: Search by Folder Name in apps.json
       for (const topic of topics) {
         for (const sub of topic.subtopics) {
           for (const app of sub.apps) {
-            if (app.path.endsWith(currentAppPath)) {
+            // Check if the app path includes the unique folder name
+            if (app.path.includes(currentFolder)) {
               currentTopic = topic;
               currentSubtopic = sub;
               return;
@@ -123,23 +142,22 @@
       const subtopicLink = document.getElementById('subtopicLink');
 
       if (!currentTopic || !currentSubtopic) {
-        topicLink.textContent = 'Unknown Topic';
-        subtopicLink.textContent = 'Unknown Subtopic';
-        subtopicLink.href = '../../../index.html';
+        topicLink.textContent = 'MathGems'; // Default text
+        subtopicLink.textContent = '';
         return;
       }
 
       topicLink.textContent = currentTopic.name;
       subtopicLink.textContent = currentSubtopic.name;
 
-      // Correct deep link back to subtopic
+      // Deep link back to homepage with correct state
       subtopicLink.href =
-        '../../../index.html?topic=' +
+        'index.html?topic=' +
         encodeURIComponent(currentTopic.id) +
         '&subtopic=' +
         encodeURIComponent(currentSubtopic.id);
     }
-  </script>
+</script>
 
 </body>
 </html>
