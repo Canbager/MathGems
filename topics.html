@@ -17,26 +17,21 @@
 
 <body class="bg-gray-50 text-gray-800">
 
-  <!-- NAVBAR (matched to index.html) -->
+  <!-- NAVBAR -->
   <header class="bg-white shadow-sm">
     <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-
-      <!-- Left: Logo + Title -->
       <div class="flex items-center space-x-3">
         <img src="img/mathgems_logo.jpeg" alt="Math Gems logo" style="height:6.5rem" class="w-auto mb-6 md:mb-0">
         <span class="text-2xl font-bold text-gray-900">
           Math<span class="text-blue-600">Gems</span>
         </span>
       </div>
-
-      <!-- Desktop Nav -->
       <nav class="hidden md:flex space-x-6">
         <a href="index.html" class="text-gray-700 hover:text-blue-600">Home</a>
         <a href="topics.html" class="text-blue-600 font-semibold">Browse Topics</a>
       </nav>
     </div>
 
-    <!-- Mobile Menu Button -->
     <button id="menuBtn" class="md:hidden focus:outline-none px-6 py-4">
       <svg class="w-7 h-7 text-gray-700" fill="none" stroke="currentColor" stroke-width="2"
            viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
@@ -44,7 +39,6 @@
       </svg>
     </button>
 
-    <!-- Mobile Menu Panel -->
     <nav id="mobileMenu"
          class="md:hidden hidden flex-col bg-white border-t border-gray-200 px-6 py-4 space-y-4">
       <a href="index.html" class="block text-gray-700 hover:text-blue-600">Home</a>
@@ -52,7 +46,7 @@
     </nav>
   </header>
 
-  <!-- PAGE HEADER (now consistent with index hero spacing) -->
+  <!-- PAGE HEADER -->
   <section class="max-w-5xl mx-auto px-6 py-16 text-center">
     <h1 class="text-4xl font-bold mb-4">Browse Topics</h1>
     <p class="text-gray-600 text-lg">
@@ -62,7 +56,7 @@
 
   <!-- APPS GRID -->
   <section class="max-w-6xl mx-auto px-6 pb-20">
-    <div id="appsGrid" class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+    <div id="appsGrid" class="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
       <!-- Cards injected here -->
     </div>
   </section>
@@ -74,7 +68,7 @@
     </div>
   </footer>
 
-  <!-- SCRIPT: Load apps.json and render cards -->
+  <!-- SCRIPT -->
   <script>
     let allApps = [];
 
@@ -96,7 +90,9 @@
           "block bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden";
 
         card.innerHTML = `
-          <img src="${app.preview}" class="w-full h-40 object-cover">
+          <div class="h-48 flex items-center justify-center bg-gray-100">
+            <img src="${app.preview}" class="max-h-full object-contain">
+          </div>
           <div class="p-5">
             <span class="inline-block px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-700 rounded-full mb-3">
               ${app.topic}
@@ -110,7 +106,6 @@
       });
     }
 
-    // MOBILE MENU
     const menuBtn = document.getElementById('menuBtn');
     const mobileMenu = document.getElementById('mobileMenu');
 
