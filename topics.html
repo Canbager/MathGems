@@ -126,6 +126,11 @@
         back.style.display = "none";
       } else {
         const topic = topics.find(t => t.id === topicId);
+        const heading = document.createElement("div");
+        heading.className = "text-sm font-semibold text-gray-500 px-3 pb-2";
+        heading.textContent = topic.name;
+        list.appendChild(heading);
+
         topic.subtopics.forEach(st => {
           const link = document.createElement("a");
           link.href = `topics.html?topic=${topic.id}&subtopic=${st.id}`;
