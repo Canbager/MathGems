@@ -56,17 +56,14 @@
 
       <!-- LEFT COLUMN -->
       <aside class="col-span-1 bg-white rounded-xl shadow p-4 space-y-4">
-
         <a id="backButton"
            href="topics.html"
            class="block text-blue-600 font-semibold mb-4">
           ← Go Back
         </a>
-
         <div id="topicList" class="space-y-2">
-          <!-- Topics injected here -->
+          <!-- Topics or subtopics injected here -->
         </div>
-
       </aside>
 
       <!-- RIGHT PANEL -->
@@ -96,13 +93,13 @@
     fetch('apps.json')
       .then(r => r.json())
       .then(data => {
-        renderLeftColumn(data.topics);
-
         const topicId = getParam("topic");
         const subtopicId = getParam("subtopic");
 
+        renderLeftColumn(data.topics, topicId, subtopicId);
+
         if (!topicId) {
-          renderRight_Topics();
+          renderRight_Topics(data.topics);
         } else if (topicId && !subtopicId) {
           const topic = data.topics.find(t => t.id === topicId);
           renderRight_Subtopics(topic);
@@ -113,32 +110,41 @@
         }
       });
 
-    /* LEFT COLUMN */
-    function renderLeftColumn(topics) {
+    function renderLeftColumn(topics, topicId, subtopicId) {
       const list = document.getElementById("topicList");
+      const back = document.getElementById("backButton");
       list.innerHTML = "";
 
-      topics.forEach(t => {
-        const link = document.createElement("a");
-        link.href = `topics.html?topic=${t.id}`;
-        link.className = "block px-3 py-2 rounded hover:bg-gray-100";
-        link.textContent = t.name;
-        list.appendChild(link);
-      });
-
-      const topicId = getParam("topic");
-      const back = document.getElementById("backButton");
-      back.style.display = topicId ? "block" : "none";
+      if (!topicId) {
+        topics.forEach(t => {
+          const link = document.createElement("a");
+          link.href = `topics.html?topic=${t.id}`;
+          link.className = "block px-3 py-2 rounded hover:bg-gray-100";
+          link.textContent = t.name;
+          list.appendChild(link);
+        });
+        back.style.display = "none";
+      } else {
+        const topic = topics.find(t => t.id === topicId);
+        topic.subtopics.forEach(st => {
+          const link = document.createElement("a");
+          link.href = `topics.html?topic=${topic.id}&subtopic=${st.id}`;
+          link.className =
+            "block px-3 py-2 rounded hover:bg-gray-100" +
+            (subtopicId === st.id ? " bg-blue-100 font-semibold" : "");
+          link.textContent = st.name;
+          list.appendChild(link);
+        });
+        back.style.display = "block";
+      }
     }
 
-    /* RIGHT PANEL — TOPICS */
-    function renderRight_Topics() {
+    function renderRight_Topics(topics) {
       document.getElementById("panelTitle").textContent = "Choose a Topic";
       document.getElementById("appsGrid").innerHTML =
         `<p class="text-gray-600">Select a topic from the left to begin.</p>`;
     }
 
-    /* RIGHT PANEL — SUBTOPICS */
     function renderRight_Subtopics(topic) {
       document.getElementById("panelTitle").textContent = topic.name;
 
@@ -159,7 +165,6 @@
       });
     }
 
-    /* RIGHT PANEL — APPS */
     function renderRight_Apps(subtopic) {
       document.getElementById("panelTitle").textContent = subtopic.name;
 
@@ -185,7 +190,6 @@
       });
     }
 
-    // MOBILE MENU
     document.getElementById("menuBtn").addEventListener("click", () => {
       document.getElementById("mobileMenu").classList.toggle("hidden");
     });
