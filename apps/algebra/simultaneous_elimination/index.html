@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>App Title — MathGems</title>
+  <title>MathGems App</title>
 
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -21,19 +21,17 @@
   <header class="bg-white shadow-sm">
     <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
       <div class="flex items-center space-x-2">
-        <img src="/img/gem.svg" alt="MathGems logo" class="w-7 h-7">
+        <img src="../../../img/gem.svg" alt="MathGems logo" class="w-7 h-7">
         <span class="text-2xl font-bold">
           <span class="text-gray-900">Math</span><span class="text-blue-600">Gems</span>
         </span>
       </div>
 
-      <!-- Desktop Nav -->
       <nav class="hidden md:flex space-x-6">
         <a href="../../../index.html" class="text-gray-700 hover:text-blue-600">Home</a>
         <a href="../../../topics.html" class="text-gray-700 hover:text-blue-600">Browse Topics</a>
       </nav>
 
-      <!-- Mobile Menu Button -->
       <button id="menuBtn" class="md:hidden focus:outline-none">
         <svg class="w-7 h-7 text-gray-700" fill="none" stroke="currentColor" stroke-width="2"
              viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
@@ -42,7 +40,6 @@
       </button>
     </div>
 
-    <!-- Mobile Menu Panel -->
     <nav id="mobileMenu"
          class="md:hidden hidden flex-col bg-white border-t border-gray-200 px-6 py-4 space-y-4">
       <a href="../../../index.html" class="block text-gray-700 hover:text-blue-600">Home</a>
@@ -51,11 +48,19 @@
   </header>
 
   <!-- APP CONTENT -->
-  <section class="max-w-6xl mx-auto px-6 pb-16">
-    <div class="bg-white rounded-xl shadow p-4 sm:p-6">
+  <section class="max-w-6xl mx-auto px-0 py-10">
+    <div class="bg-white rounded-xl shadow overflow-hidden">
 
-      <!-- Main app root: external app HTML will be injected here -->
-      <div id="appRoot"></div>
+      <!-- FULL-SIZE APP WINDOW -->
+      <iframe 
+        src="app_code.html"
+        style="
+          width: 100%;
+          height: calc(100vh + 180px);
+          border: 0;
+          display: block;
+        "
+      ></iframe>
 
     </div>
   </section>
@@ -67,30 +72,13 @@
     </div>
   </footer>
 
-  <!-- SCRIPTS -->
+  <!-- MOBILE MENU SCRIPT -->
   <script>
-    // MOBILE MENU
     const menuBtn = document.getElementById('menuBtn');
     const mobileMenu = document.getElementById('mobileMenu');
-
     menuBtn.addEventListener('click', () => {
       mobileMenu.classList.toggle('hidden');
     });
-
-    // EMBED APP CODE
-    // Change this path for each app page:
-    const appPath = 'app_code.html'; // e.g. 'apps/algebra/completing_the_square/app_code.html'
-
-    fetch(appPath)
-      .then(response => response.text())
-      .then(html => {
-        document.getElementById('appRoot').innerHTML = html;
-      })
-      .catch(err => {
-        console.error('Error loading app:', err);
-        document.getElementById('appRoot').innerHTML =
-          '<p class="text-red-500">Sorry, the app failed to load.</p>';
-      });
   </script>
 
 </body>
