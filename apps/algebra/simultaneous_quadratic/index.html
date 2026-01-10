@@ -62,24 +62,24 @@
             margin: 0;
             font: inherit;
             color: currentColor;
-            width: 1.5em;
-            height: 1.5em;
+            width: 1.25em;
+            height: 1.25em;
             border: 2px solid #1e293b;
-            border-radius: 0.25em;
+            border-radius: 50%;
             display: grid;
             place-content: center;
             cursor: pointer;
         }
         .sketch-checkbox::before {
             content: "";
-            width: 0.85em;
-            height: 0.85em;
+            width: 0.65em;
+            height: 0.65em;
+            border-radius: 50%;
             transform: scale(0);
             transition: 120ms transform ease-in-out;
             box-shadow: inset 1em 1em #4f46e5;
             background-color: #4f46e5;
             transform-origin: center;
-            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
         }
         .sketch-checkbox:checked::before {
             transform: scale(1);
@@ -104,12 +104,16 @@
             
             <div class="flex flex-wrap gap-4 items-center bg-slate-100 p-3 rounded-lg border-2 border-slate-800">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                    <input type="checkbox" id="opt-integers" class="sketch-checkbox" checked onchange="generateProblem()">
-                    <span class="font-bold text-slate-700 text-sm">Nice Numbers</span>
+                    <input type="radio" name="diff" id="opt-small" class="sketch-checkbox" checked onchange="generateProblem()">
+                    <span class="font-bold text-slate-700 text-sm">Small Integers</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                    <input type="checkbox" id="opt-decimal" class="sketch-checkbox" onchange="generateProblem()">
-                    <span class="font-bold text-slate-700 text-sm">Tricky (Decimals)</span>
+                    <input type="radio" name="diff" id="opt-large" class="sketch-checkbox" onchange="generateProblem()">
+                    <span class="font-bold text-slate-700 text-sm">Large Integers</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="radio" name="diff" id="opt-decimal" class="sketch-checkbox" onchange="generateProblem()">
+                    <span class="font-bold text-slate-700 text-sm">Decimals</span>
                 </label>
                 <button id="resetBtn" class="bg-white border-2 border-slate-800 px-4 py-1 rounded sketch-font font-bold hover:bg-yellow-50 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all">
                     New Question
@@ -164,7 +168,7 @@
                                         <span>$= 0$</span>
                                     </div>
                                     <button onclick="checkRearrange()" class="sketch-btn px-3 py-1 bg-indigo-50 hover:bg-indigo-100 rounded text-sm">Check</button>
-                                    <span id="feedback-step2" class="text-lg"></span>
+                                    <div id="feedback-step2" class="text-lg mt-2 font-bold min-h-[1.5rem]"></div>
                                 </div>
                             </div>
 
@@ -182,7 +186,7 @@
                                         </div>
                                     </div>
                                     <button onclick="checkX()" class="sketch-btn px-6 py-2 bg-indigo-50 hover:bg-indigo-100 rounded text-sm">Check x</button>
-                                    <div id="feedback-step3" class="text-lg"></div>
+                                    <div id="feedback-step3" class="text-lg mt-2 font-bold min-h-[1.5rem]"></div>
                                 </div>
                             </div>
 
@@ -222,7 +226,7 @@
                                             </div>
                                         </div>
                                         <button onclick="checkY()" class="mt-4 sketch-btn px-6 py-2 bg-indigo-50 hover:bg-indigo-100 rounded text-sm">Check Final Answer</button>
-                                        <div id="feedback-step4" class="text-lg"></div>
+                                        <div id="feedback-step4" class="text-lg mt-2 font-bold min-h-[1.5rem]"></div>
                                     </div>
                                     
                                     <!-- Success Banner -->
@@ -321,18 +325,105 @@
         let scale = 20; 
         let origin = { x: 0, y: 0 };
         let showPoints = false;
-        let step2Done = false; // Flag for resultant graph visual
+        let step2Done = false; 
+        let step3Done = false; // New flag for roots
         
         // Animation State
         let animTime = 0;
         let isAnimating = false;
-        
+        let connectionBg = null; // Cache for background
+
         // --- UTILITIES ---
         const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
         // Better Decimal Formatting
         function formatNum(n) {
             return parseFloat(n.toFixed(2)).toString();
+        }
+
+        function formatCoeff(val, isFirst = false) {
+            if (val === 0) return "";
+            let s = "";
+            if (val < 0) s += "-";
+            else if (!isFirst) s += "+";
+            
+            if (Math.abs(val) !== 1) s += Math.abs(val);
+            return s;
+        }
+
+        // --- PROBLEM GENERATION ---
+        function generateProblem() {
+            // Updated IDs based on new labels
+            const elSmall = document.getElementById('opt-small');
+            const elLarge = document.getElementById('opt-large');
+            const elDecimal = document.getElementById('opt-decimal');
+
+            const isSmall = elSmall ? elSmall.checked : true;
+            const isLarge = elLarge ? elLarge.checked : false;
+            
+            let r1, r2;
+            let aRange, bRange, cRange;
+
+            if (isSmall) {
+                // Small Integers
+                r1 = rnd(-4, 4);
+                r2 = rnd(-4, 4);
+                if(r1 === r2) r2 += 1;
+                aRange = 1; 
+                bRange = 4;
+                cRange = 6;
+            } else if (isLarge) {
+                // Large Integers
+                r1 = rnd(-9, 9);
+                r2 = rnd(-9, 9);
+                if(r1 === r2) r2 += 2;
+                aRange = 3;
+                bRange = 10;
+                cRange = 20;
+            } else {
+                // Decimals
+                r1 = rnd(-50, 50)/10;
+                r2 = rnd(-50, 50)/10;
+                if(Math.abs(r1 - r2) < 0.5) r2 += 1.5;
+                aRange = 2;
+                bRange = 8;
+                cRange = 10;
+            }
+
+            const a = (Math.random() > 0.5 ? 1 : -1) * (isSmall ? 1 : rnd(1, aRange));
+            const resB = -a * (r1 + r2);
+            const resC = a * r1 * r2;
+
+            const q_b = rnd(-bRange, bRange);
+            const q_c = rnd(-cRange, cRange); 
+
+            const l_m = q_b - resB;
+            const l_k = q_c - resC;
+
+            currentProblem = {
+                q: { a: a, b: q_b, c: q_c },
+                l: { m: l_m, k: l_k },
+                res: { a: a, b: resB, c: resC }, 
+                roots: [r1, r2],
+                yVals: [l_m*r1 + l_k, l_m*r2 + l_k]
+            };
+
+            const qStr = `y = ${formatPoly(a, q_b, q_c)}`;
+            const lStr = `y = ${formatPoly(0, l_m, l_k)}`; 
+            
+            katex.render(`\\begin{cases} ${qStr} \\\\ ${lStr} \\end{cases}`, document.getElementById('problem-text'), KATEX_CONFIG);
+            
+            document.getElementById('step1-lhs').innerHTML = `$${formatPoly(a, q_b, q_c)}$`;
+            document.getElementById('step1-rhs').innerHTML = `$${formatPoly(0, l_m, l_k)}$`;
+            
+            renderMathInElement(document.getElementById('step1-lhs'), KATEX_CONFIG);
+            renderMathInElement(document.getElementById('step1-rhs'), KATEX_CONFIG);
+
+            resetUI();
+            showPoints = false;
+            step2Done = false;
+            step3Done = false; // Reset
+            resizeCanvases();
         }
 
         function formatPoly(a, b, c) {
@@ -367,56 +458,6 @@
             return s.replace(/\+/g, " + ").replace(/-/g, " - ").replace(/^ - /, "-"); 
         }
 
-        // --- PROBLEM GENERATION ---
-        function generateProblem() {
-            const optInt = document.getElementById('opt-integers').checked;
-            
-            let r1, r2;
-            if (optInt) {
-                r1 = rnd(-5, 5);
-                r2 = rnd(-5, 5);
-                if(r1 === r2) r2 += 1; 
-            } else {
-                r1 = rnd(-50, 50)/10;
-                r2 = rnd(-50, 50)/10;
-                if(r1 === r2) r2 += 0.5;
-            }
-
-            const a = (Math.random() > 0.5 ? 1 : -1) * (optInt ? 1 : rnd(1,2));
-            const resB = -a * (r1 + r2);
-            const resC = a * r1 * r2;
-
-            const q_b = rnd(-5, 5);
-            const q_c = rnd(-8, 8); 
-
-            const l_m = q_b - resB;
-            const l_k = q_c - resC;
-
-            currentProblem = {
-                q: { a: a, b: q_b, c: q_c },
-                l: { m: l_m, k: l_k },
-                res: { a: a, b: resB, c: resC }, 
-                roots: [r1, r2],
-                yVals: [l_m*r1 + l_k, l_m*r2 + l_k]
-            };
-
-            const qStr = `y = ${formatPoly(a, q_b, q_c)}`;
-            const lStr = `y = ${formatPoly(0, l_m, l_k)}`; 
-            
-            katex.render(`\\begin{cases} ${qStr} \\\\ ${lStr} \\end{cases}`, document.getElementById('problem-text'), KATEX_CONFIG);
-            
-            document.getElementById('step1-lhs').innerHTML = `$${formatPoly(a, q_b, q_c)}$`;
-            document.getElementById('step1-rhs').innerHTML = `$${formatPoly(0, l_m, l_k)}$`;
-            
-            renderMathInElement(document.getElementById('step1-lhs'), KATEX_CONFIG);
-            renderMathInElement(document.getElementById('step1-rhs'), KATEX_CONFIG);
-
-            resetUI();
-            showPoints = false;
-            step2Done = false;
-            resizeCanvases();
-        }
-
         // --- UI LOGIC ---
         function resetUI() {
             document.querySelectorAll('input').forEach(i => {
@@ -432,7 +473,6 @@
             document.getElementById('resultant-wrapper-box').classList.add('hidden');
             document.getElementById('final-connection-box').classList.add('hidden');
             
-            // Reset Step 4 visuals
             document.getElementById('sub-choice-container').classList.remove('hidden');
             document.getElementById('sub-work-container').classList.add('hidden');
             document.getElementById('sub-hint-text').innerHTML = '';
@@ -441,6 +481,7 @@
             document.getElementById('disp-x2').textContent = "?";
             
             isAnimating = false;
+            connectionBg = null; // Clear cached BG
         }
 
         function resetBox(id, active) {
@@ -454,11 +495,12 @@
             }
         }
 
+        // Smart Feedback Function
         function feedback(id, isCorrect, msg="") {
             const el = document.getElementById(id);
             if (!el) return; 
             if(isCorrect) el.innerHTML = `<span class="text-emerald-600 font-bold">✓</span>`;
-            else el.innerHTML = `<span class="text-red-500 font-bold">✗ ${msg}</span>`;
+            else el.innerHTML = `<span class="text-red-500 font-bold text-sm">✗ ${msg}</span>`;
             
             if(msg.includes('$')) renderMathInElement(el, KATEX_CONFIG);
         }
@@ -484,12 +526,19 @@
                 feedback('feedback-step2', true);
                 resetBox('box-step3', true);
                 document.getElementById('tip-text').innerText = "Now solve this new quadratic equation to find the x-values.";
-                
-                step2Done = true; // Reveal roots visual on resultant graph
+                step2Done = true; 
                 document.getElementById('resultant-wrapper-box').classList.remove('hidden');
                 drawResultantGraph(); 
             } else {
-                feedback('feedback-step2', false, `Check terms. Should be $${formatPoly(r.a, r.b, r.c)}$`);
+                let hint = "Check your algebra.";
+                const isSignError = (Math.abs(uA - r.a) < 0.01 && Math.abs(Math.abs(uB) - Math.abs(r.b)) < 0.01 && Math.abs(Math.abs(uC) - Math.abs(r.c)) < 0.01);
+                
+                if (Math.abs(uA - r.a) > 0.01) hint = "Did you change the x² coefficient? You shouldn't need to.";
+                else if (Math.abs(uB - r.b) > 0.01) hint = "Check the x term. Subtract the linear x from the quadratic x.";
+                else if (Math.abs(uC - r.c) > 0.01) hint = "Check the constant term. Quadratic constant minus Linear constant.";
+                
+                if(isSignError) hint = "Check your signs. Are you subtracting correctly?";
+                feedback('feedback-step2', false, hint);
             }
         }
 
@@ -508,22 +557,30 @@
             if (match1 || match2) {
                 feedback('feedback-step3', true);
                 resetBox('box-step4', true);
-                
                 document.getElementById('disp-x1').textContent = formatNum(u1);
                 document.getElementById('disp-x2').textContent = formatNum(u2);
                 document.getElementById('tip-text').innerText = "Choose the simpler equation to find the y-values.";
+                
+                // Show roots on resultant graph now
+                step3Done = true;
+                drawResultantGraph();
             } else {
-                feedback('feedback-step3', false, "Check roots");
+                if (Math.abs(u1 + u2 - (r1 + r2)) < 0.1 && Math.abs(u1*u2 - r1*r2) > 0.1) {
+                    feedback('feedback-step3', false, "Sum looks right, product wrong. Check sign of c.");
+                } else if ((Math.abs(u1 + r1) < 0.05 && Math.abs(u2 + r2) < 0.05) || (Math.abs(u1 + r2) < 0.05 && Math.abs(u2 + r1) < 0.05)) {
+                    feedback('feedback-step3', false, "Sign error! Check -b in formula.");
+                } else {
+                    feedback('feedback-step3', false, "Incorrect roots. Check your formula/factors.");
+                }
             }
         }
 
-        // STEP 4 - SUBSTITUTION LOGIC
         function chooseSubstitution(type) {
             document.getElementById('sub-choice-container').classList.add('hidden');
             document.getElementById('sub-work-container').classList.remove('hidden');
             
             const p = currentProblem;
-            const x1 = parseFloat(document.getElementById('input-x1').value); // get inputs from prev step
+            const x1 = parseFloat(document.getElementById('input-x1').value); 
             
             let hint = "";
             if (type === 'linear') {
@@ -557,14 +614,19 @@
                 showPoints = true;
                 drawGraph();
                 
-                // Start Animation loop if not already running
+                // Force resize of connection box canvas since it was hidden
+                const conWrapper = document.getElementById('final-connection-box');
+                conCanvas.width = conWrapper.clientWidth;
+                conCanvas.height = conWrapper.clientHeight;
+                connectionBg = null;
+
                 if(!isAnimating) {
                     isAnimating = true;
                     animTime = 0;
                     drawConnectionVisual();
                 }
             } else {
-                feedback('feedback-step4', false, "Check y values");
+                feedback('feedback-step4', false, "Incorrect Y values. Check your substitution arithmetic.");
             }
         }
 
@@ -575,13 +637,15 @@
             canvas.height = wrapper.clientHeight;
             
             const resWrapper = document.getElementById('resultant-wrapper-box');
-            // If hidden, clientWidth is 0. Use defaults.
             resCanvas.width = resWrapper.clientWidth || 300; 
             resCanvas.height = resWrapper.clientHeight || 300;
 
             const conWrapper = document.getElementById('final-connection-box');
             conCanvas.width = conWrapper.clientWidth || 300;
             conCanvas.height = conWrapper.clientHeight || 300;
+            
+            // Invalidate cache on resize
+            connectionBg = null;
 
             drawGraph();
             if(!document.getElementById('resultant-wrapper-box').classList.contains('hidden')) {
@@ -592,21 +656,39 @@
             }
         }
 
-        // Shared helper to setup graph coords
-        function getGraphConfig(w, h, p) {
+        function getOptimizedGraphConfig(w, h, p) {
+            // Find bounds for Roots AND Intersections
             const r1 = p.roots[0];
             const r2 = p.roots[1];
             const y1 = p.yVals[0];
             const y2 = p.yVals[1];
             
-            const maxAbsX = Math.max(Math.abs(r1), Math.abs(r2), 5);
-            const maxAbsY = Math.max(Math.abs(y1), Math.abs(y2), 15);
+            let minX = Math.min(r1, r2);
+            let maxX = Math.max(r1, r2);
+            let minY = Math.min(0, y1, y2);
+            let maxY = Math.max(0, y1, y2);
             
-            const scale = Math.min(w/(2.5*maxAbsX), h/(3*maxAbsY));
-            const originX = w / 2;
-            const originY = h / 2;
+            const padX = (maxX - minX) * 0.4 + 2; 
+            const padY = (maxY - minY) * 0.4 + 2;
             
-            return { scale, originX, originY, maxAbsX, maxAbsY };
+            minX -= padX; maxX += padX;
+            minY -= padY; maxY += padY;
+            
+            const spanX = maxX - minX;
+            const spanY = maxY - minY;
+            
+            const scaleX = w / spanX;
+            const scaleY = h / spanY;
+            
+            const scale = Math.min(scaleX, scaleY); 
+            
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+            
+            const originX = w/2 - centerX * scale;
+            const originY = h/2 + centerY * scale;
+            
+            return { scale, originX, originY };
         }
 
         function drawGraph() {
@@ -615,7 +697,7 @@
 
             const w = canvas.width;
             const h = canvas.height;
-            const cfg = getGraphConfig(w, h, currentProblem);
+            const cfg = getOptimizedGraphConfig(w, h, currentProblem);
             const { scale, originX, originY } = cfg;
             
             const toScreen = (x, y) => ({
@@ -656,8 +738,6 @@
             plotPoints((x) => p.q.a*x*x + p.q.b*x + p.q.c, '#3b82f6'); // Blue
             plotPoints((x) => p.l.m*x + p.l.k, '#ef4444'); // Red
 
-            // No resultant on main graph now
-
             if (showPoints) {
                 p.roots.forEach((rx, i) => {
                     const ry = p.yVals[i];
@@ -677,7 +757,7 @@
             const h = resCanvas.height;
             resCtx.clearRect(0, 0, w, h);
             
-            const cfg = getGraphConfig(w, h, currentProblem);
+            const cfg = getOptimizedGraphConfig(w, h, currentProblem);
             const { scale, originX, originY } = cfg; // Match scale of main graph
             
             const toScreen = (x, y) => ({
@@ -708,8 +788,8 @@
             }
             roughResCanvas.curve(points, { stroke: '#a855f7', strokeWidth: 2, strokeLineDash: [5, 5] });
             
-            // Mark Roots - SHOW IF STEP 2 DONE
-            if(step2Done) {
+            // Mark Roots - SHOW IF STEP 3 DONE (Changed from step2Done)
+            if(step3Done) {
                 p.roots.forEach(r => {
                     const sc = toScreen(r, 0);
                     roughResCanvas.circle(sc.x, sc.y, 6, { fill: '#a855f7', fillStyle: 'solid', stroke: 'none' });
@@ -725,78 +805,77 @@
             if(!currentProblem || !isAnimating) return;
             const w = conCanvas.width;
             const h = conCanvas.height;
-            conCtx.clearRect(0, 0, w, h);
             
-            const p = currentProblem;
-            
-            // Use same configuration as main graph so they look identical
-            const cfg = getGraphConfig(w, h, p);
-            const { scale, originX, originY } = cfg;
-            
-            const toScreen = (x, y) => ({
-                x: originX + x * scale,
-                y: originY - y * scale
-            });
+            // 1. Draw Static Background (Once or Cached)
+            if (!connectionBg) {
+                conCtx.clearRect(0, 0, w, h);
+                const p = currentProblem;
+                const cfg = getOptimizedGraphConfig(w, h, p);
+                const { scale, originX, originY } = cfg;
+                const toScreen = (x, y) => ({ x: originX + x * scale, y: originY - y * scale });
 
-            // Draw Axes
-            roughConCanvas.line(0, originY, w, originY, { stroke: '#94a3b8', strokeWidth: 1 });
-            roughConCanvas.line(originX, 0, originX, h, { stroke: '#94a3b8', strokeWidth: 1 });
+                // Axes
+                roughConCanvas.line(0, originY, w, originY, { stroke: '#94a3b8', strokeWidth: 1 });
+                roughConCanvas.line(originX, 0, originX, h, { stroke: '#94a3b8', strokeWidth: 1 });
 
-            // Helper Plot
-            const plot = (func, color, dashed=false) => {
-                const step = 0.1;
-                const pts = [];
-                const rangeX = w/(2*scale);
-                for(let x=-rangeX; x<=rangeX; x+=step) {
-                    const y = func(x);
-                    const pt = toScreen(x, y);
-                    if(pt.y > -50 && pt.y < h+50) pts.push([pt.x, pt.y]);
+                // Plots
+                const plot = (func, color, dashed=false) => {
+                    const step = 0.1;
+                    const pts = [];
+                    const rangeX = w/(2*scale);
+                    for(let x=-rangeX; x<=rangeX; x+=step) {
+                        const y = func(x);
+                        const pt = toScreen(x, y);
+                        if(pt.y > -50 && pt.y < h+50) pts.push([pt.x, pt.y]);
+                    }
+                    const ops = {stroke: color, strokeWidth: 2};
+                    if(dashed) ops.strokeLineDash = [5,5];
+                    roughConCanvas.curve(pts, ops);
                 }
-                const ops = {stroke: color, strokeWidth: 2};
-                if(dashed) ops.strokeLineDash = [5,5];
-                roughConCanvas.curve(pts, ops);
+                
+                plot(x => p.q.a*x*x + p.q.b*x + p.q.c, '#3b82f6');
+                plot(x => p.l.m*x + p.l.k, '#ef4444');
+                plot(x => p.res.a*x*x + p.res.b*x + p.res.c, '#a855f7', true);
+                
+                // Cache
+                connectionBg = conCtx.getImageData(0, 0, w, h);
+            } else {
+                conCtx.putImageData(connectionBg, 0, 0);
             }
-            
-            // Draw All 3
-            plot(x => p.q.a*x*x + p.q.b*x + p.q.c, '#3b82f6'); // Q
-            plot(x => p.l.m*x + p.l.k, '#ef4444'); // L
-            plot(x => p.res.a*x*x + p.res.b*x + p.res.c, '#a855f7', true); // Res
 
-            // Animation Logic
-            // t goes 0 -> 1 -> 0 based on sin wave
-            animTime += 0.05;
-            const t = (Math.sin(animTime) + 1) / 2; // 0 to 1
-            
-            // Draw Animated Dots
-            p.roots.forEach((rx, i) => {
-                const ry_intersect = p.yVals[i]; // Intersection Y
-                const ry_root = 0; // Axis Y
-                
-                // Interpolate Y
-                const currentY = ry_intersection => ry_intersection * (1-t) + ry_root * t;
-                const movingY = currentY(ry_intersect);
-                
-                const pt = toScreen(rx, movingY);
-                
-                // Draw connecting vertical dashed line
-                const topPt = toScreen(rx, ry_intersect);
-                const botPt = toScreen(rx, 0);
-                roughConCanvas.line(topPt.x, topPt.y, botPt.x, botPt.y, { stroke: '#cbd5e1', strokeWidth: 1, strokeLineDash: [4, 4] });
+            // 2. Draw Moving Parts if Animating
+            if (isAnimating) {
+                const p = currentProblem;
+                const cfg = getOptimizedGraphConfig(w, h, p); // Recalc scale
+                const { scale, originX, originY } = cfg;
+                const toScreen = (x, y) => ({ x: originX + x * scale, y: originY - y * scale });
 
-                // Draw moving dot
-                roughConCanvas.circle(pt.x, pt.y, 8, { fill: '#eab308', fillStyle: 'solid', stroke: 'none' });
-            });
-            
-            if(isAnimating) requestAnimationFrame(drawConnectionVisual);
+                animTime += 0.05;
+                const t = (Math.sin(animTime) + 1) / 2;
+                
+                p.roots.forEach((rx, i) => {
+                    const ry_intersect = p.yVals[i]; 
+                    const ry_root = 0; 
+                    
+                    const currentY = ry_intersect * (1-t) + ry_root * t;
+                    const pt = toScreen(rx, currentY);
+                    
+                    const topPt = toScreen(rx, ry_intersect);
+                    const botPt = toScreen(rx, 0);
+                    
+                    // Guides
+                    roughConCanvas.line(topPt.x, topPt.y, botPt.x, botPt.y, { stroke: '#cbd5e1', strokeWidth: 1, strokeLineDash: [4, 4] });
+                    // Moving Dot
+                    roughConCanvas.circle(pt.x, pt.y, 8, { fill: '#eab308', fillStyle: 'solid', stroke: 'none' });
+                });
+                
+                requestAnimationFrame(drawConnectionVisual);
+            }
         }
 
-        // --- INIT ---
         window.addEventListener('resize', resizeCanvases);
         document.getElementById('resetBtn').addEventListener('click', generateProblem);
-        
-        generateProblem(); // Start
-
-        // Global Render for Static Content
+        generateProblem();
         renderMathInElement(document.body, KATEX_CONFIG);
 
     </script>
