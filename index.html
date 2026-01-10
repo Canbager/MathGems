@@ -130,7 +130,6 @@
     </div>
   </footer>
 
-  <!-- SCRIPT -->
   <script>
     // MOBILE MENU
     const menuBtn = document.getElementById('menuBtn');
@@ -150,11 +149,46 @@
         homeTopics = data.topics || [];
         if (homeTopics.length === 0) return;
 
-        homeCurrentTopic = homeTopics[0];
-        homeCurrentSubtopic = null;
-
-        renderHomeTopicMode();
+        // NEW: Check URL params before deciding what to render
+        checkUrlParams();
       });
+
+    function checkUrlParams() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramTopicId = urlParams.get('topic');
+      const paramSubId = urlParams.get('subtopic');
+
+      // 1. Try to find the requested topic
+      if (paramTopicId) {
+        const foundTopic = homeTopics.find(t => t.id === paramTopicId);
+        if (foundTopic) {
+          homeCurrentTopic = foundTopic;
+          
+          // 2. If topic found, try to find the requested subtopic
+          if (paramSubId) {
+            const foundSub = foundTopic.subtopics.find(s => s.id === paramSubId);
+            if (foundSub) {
+              homeCurrentSubtopic = foundSub;
+              // Render the specific subtopic view directly
+              renderHomeSubtopicMode();
+              
+              // Scroll to the browser section so the user sees it immediately
+              document.getElementById('browser').scrollIntoView({ behavior: 'smooth' });
+              return;
+            }
+          }
+          // If topic found but no subtopic (or invalid subtopic), render topic view
+          renderHomeTopicMode();
+          document.getElementById('browser').scrollIntoView({ behavior: 'smooth' });
+          return;
+        }
+      }
+
+      // 3. Fallback: Default to the first topic if no params or invalid params
+      homeCurrentTopic = homeTopics[0];
+      homeCurrentSubtopic = null;
+      renderHomeTopicMode();
+    }
 
     function renderHomeTopicMode() {
       const list = document.getElementById('homeTopicList');
@@ -176,6 +210,8 @@
         btn.addEventListener('click', () => {
           homeCurrentTopic = topic;
           homeCurrentSubtopic = null;
+          // Clear URL params when switching topics manually so the URL stays clean
+          window.history.replaceState(null, '', window.location.pathname); 
           renderHomeTopicMode();
         });
         list.appendChild(btn);
@@ -209,6 +245,8 @@
       back.onclick = (e) => {
         e.preventDefault();
         homeCurrentSubtopic = null;
+        // Clear params on back
+        window.history.replaceState(null, '', window.location.pathname);
         renderHomeTopicMode();
       };
 
@@ -238,6 +276,7 @@
 
       homeCurrentSubtopic.apps.forEach(app => {
         const card = document.createElement('a');
+        // Ensure we pass the topic/subtopic IDs so the next page knows where it came from
         card.href =
           app.path +
           '?topic=' + encodeURIComponent(homeCurrentTopic.id) +
