@@ -238,7 +238,11 @@
 
       homeCurrentSubtopic.apps.forEach(app => {
         const card = document.createElement('a');
-        card.href = app.path;
+        card.href =
+          app.path +
+          '?topic=' + encodeURIComponent(homeCurrentTopic.id) +
+          '&subtopic=' + encodeURIComponent(homeCurrentSubtopic.id);
+
         card.className = 'block bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden';
 
         card.innerHTML = `
