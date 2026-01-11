@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Homepage -->
+  <url>
+    <loc>https://mathgems.ai/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Algebra → Quadratics -->
+  <url>
+    <loc>https://mathgems.ai/apps/algebra/quadratic/index.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://mathgems.ai/apps/algebra/quadratic_formula/index.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://mathgems.ai/apps/algebra/completing_the_square/index.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Algebra → Simultaneous Equations -->
+  <url>
+    <loc>https://mathgems.ai/apps/algebra/simultaneous_elimination/index.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://mathgems.ai/apps/algebra/simultaneous_quadratic/index.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Number → Fractions & Decimals -->
+  <url>
+    <loc>https://mathgems.ai/apps/number/recurring_decimals/index.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Geometry → Circle Theorems -->
+  <url>
+    <loc>https://mathgems.ai/apps/geometry/circle_theorems_mix/index.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Coming Soon pages (optional) -->
+  <!-- Uncomment these if you want them indexed -->
+
+  <!--
+  <url>
+    <loc>https://mathgems.ai/index.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  -->
+
+</urlset>
