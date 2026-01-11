@@ -106,8 +106,8 @@
               "id": "coming_soon",
               "title": "Coming Soon",
               "description": "Learning Interactive",
-              "path": "apps/functions/app/index.html",
-              "preview": "apps/functions/app/preview.jpeg"
+              "path": "index.html",
+              "preview": "preview.jpeg"
             }
           ]
         }
@@ -126,8 +126,8 @@
               "id": "coming_soon",
               "title": "Coming Soon",
               "description": "Learning Interactive",
-              "path": "apps/statistics/app/index.html",
-              "preview": "apps/statistic/app/preview.jpeg"
+              "path": "index.html",
+              "preview": "preview.jpeg"
             }
           ]
         }
@@ -146,8 +146,8 @@
               "id": "coming_soon",
               "title": "Coming Soon",
               "description": "Learning Interactive",
-              "path": "apps/probability/app/index.html",
-              "preview": "apps/probability/app/preview.jpeg"
+              "path": "index.html",
+              "preview": "preview.jpeg"
             }
           ]
         }
