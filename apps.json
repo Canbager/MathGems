@@ -86,15 +86,53 @@
               "id": "circle_theorems_mix",
               "title": "Circle Theorems Mix",
               "description": "Learning Interactive",
-              "path": "apps/Geometry/Circle_Theorems_Mix/Index.html",
-              "preview": "apps/Geometry/Circle_Theorems_Mix/Preview.jpeg"
+              "path": "apps/geometry/circle_theorems_mix/index.html",
+              "preview": "apps/geometry/circle_theorems_mix/preview.jpeg"
             }
           ]
         }
       ]
     }
 
+{
+      "id": "statistics",
+      "name": "statistics",
+      "subtopics": [
+        {
+          "id": "subtopic_coming_soon",
+          "name": "Coming Soon",
+          "apps": [
+            {
+              "id": "coming_soon",
+              "title": "Coming Soon",
+              "description": "Learning Interactive",
+              "path": "apps/statistics/app/index.html",
+              "preview": "apps/statistic/app/preview.jpeg"
+            }
+          ]
+        }
+      ]
+    }
 
+{
+      "id": "probability",
+      "name": "probability",
+      "subtopics": [
+        {
+          "id": "subtopic_coming_soon",
+          "name": "Coming Soon",
+          "apps": [
+            {
+              "id": "coming_soon",
+              "title": "Coming Soon",
+              "description": "Learning Interactive",
+              "path": "apps/probability/app/index.html",
+              "preview": "apps/probability/app/preview.jpeg"
+            }
+          ]
+        }
+      ]
+    }
 
     
   ]
