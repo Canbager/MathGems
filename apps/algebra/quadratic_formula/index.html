@@ -274,7 +274,7 @@
     </div>
   </footer>
 
- <script>
+  <script>
     // MOBILE MENU
     const menuBtn = document.getElementById('menuBtn');
     const mobileMenu = document.getElementById('mobileMenu');
@@ -299,6 +299,7 @@
         topics = data.topics || [];
         findCurrentLocation();
         renderAppTopNav();
+        injectBreadcrumbJSONLD();
       });
 
     function findCurrentLocation() {
@@ -357,6 +358,41 @@
         '&subtopic=' +
         encodeURIComponent(currentSubtopic.id);
     }
+
+   function injectBreadcrumbJSONLD() {
+    if (!currentTopic || !currentSubtopic) return;
+  
+    const breadcrumbData = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "MathGems",
+          "item": "https://mathgems.ai/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": currentTopic.name,
+          "item": "https://mathgems.ai/apps/" + currentTopic.id + "/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": currentSubtopic.name,
+          "item": "https://mathgems.ai/apps/" + currentTopic.id + "/" + currentSubtopic.id + "/"
+        }
+      ]
+    };
+  
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.textContent = JSON.stringify(breadcrumbData);
+    document.head.appendChild(script);
+  }
+
 
 </script>
 
