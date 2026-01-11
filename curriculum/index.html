@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Curriculum – MathGems</title>
+  <link rel="canonical" href="https://mathgems.ai/curriculum/">
+
+  <!-- Schema for Curriculum Page -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "MathGems Curriculum Overview",
+    "url": "https://mathgems.ai/curriculum/",
+    "description": "Overview of MathGems topics, subtopics, and interactive learning tools.",
+    "inLanguage": "en",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "MathGems",
+      "url": "https://mathgems.ai/"
+    }
+  }
+  </script>
+
+  <style>
+    body { font-family: Inter, sans-serif; padding: 2rem; max-width: 900px; margin: auto; }
+    h1 { font-size: 2rem; margin-bottom: 1rem; }
+    h2 { margin-top: 2rem; font-size: 1.6rem; }
+    h3 { margin-top: 1rem; font-size: 1.2rem; }
+    ul { margin-left: 1.2rem; }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+
+<body>
+
+  <h1>MathGems Curriculum Overview</h1>
+  <p>Overview of MathGems topics, subtopics, and interactive learning tools.</p>
+
+  <div id="curriculum"></div>
+
+  <!-- Load your JSON file -->
+  <script>
+    fetch('../topics.json')
+      .then(response => response.json())
+      .then(data => {
+        const container = document.getElementById('curriculum');
+
+        data.topics.forEach(topic => {
+          // Topic heading
+          const topicEl = document.createElement('h2');
+          topicEl.textContent = topic.name;
+          container.appendChild(topicEl);
+
+          // Subtopics
+          topic.subtopics.forEach(sub => {
+            const subEl = document.createElement('h3');
+            subEl.textContent = sub.name;
+            container.appendChild(subEl);
+
+            const ul = document.createElement('ul');
+
+            // Apps
+            sub.apps.forEach(app => {
+              const li = document.createElement('li');
+              const a = document.createElement('a');
+
+              // Ensure path always starts with /
+              const path = app.path.startsWith('/') ? app.path : '/' + app.path;
+
+              a.href = path;
+              a.textContent = app.title;
+
+              li.appendChild(a);
+              ul.appendChild(li);
+            });
+
+            container.appendChild(ul);
+          });
+        });
+      })
+      .catch(err => {
+        console.error('Error loading curriculum:', err);
+        document.getElementById('curriculum').innerHTML =
+          '<p>Unable to load curriculum data.</p>';
+      });
+  </script>
+
+</body>
+</html>
