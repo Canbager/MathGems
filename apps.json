@@ -95,8 +95,28 @@
     },
 
 {
+      "id": "functions",
+      "name": "Functions",
+      "subtopics": [
+        {
+          "id": "subtopic_coming_soon",
+          "name": "Coming Soon",
+          "apps": [
+            {
+              "id": "coming_soon",
+              "title": "Coming Soon",
+              "description": "Learning Interactive",
+              "path": "apps/functions/app/index.html",
+              "preview": "apps/functions/app/preview.jpeg"
+            }
+          ]
+        }
+      ]
+    },
+
+{
       "id": "statistics",
-      "name": "statistics",
+      "name": "Statistics & Data",
       "subtopics": [
         {
           "id": "subtopic_coming_soon",
@@ -116,7 +136,7 @@
 
 {
       "id": "probability",
-      "name": "probability",
+      "name": "Probability",
       "subtopics": [
         {
           "id": "subtopic_coming_soon",
