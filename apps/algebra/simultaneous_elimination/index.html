@@ -3,7 +3,193 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MathGems App</title>
+  <title>Solving Simultaneous Equations (Elimination) – MathGems</title>
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://mathgems.ai/apps/algebra/simultaneous_elimination/" />
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LearningResource",
+
+    "name": "Solving Simultaneous Equations (Elimination Method)",
+    "description": "Interactive practice and clear explanations for solving simultaneous equations using the elimination method, including integer, decimal, and fractional coefficients.",
+
+    "learningResourceType": [
+      "Interactive Exercise",
+      "Worked Example"
+    ],
+
+    "educationalUse": [
+      "practice",
+      "guided support",
+      "instruction",
+      "revision",
+      "diagnosis"
+    ],
+
+    "interactivityType": "active",
+
+    "about": [
+      "algebra",
+      "simultaneous equations",
+      "elimination method",
+      "linear equations",
+      "integer coefficients",
+      "decimal coefficients",
+      "fraction coefficients",
+      "common misconceptions"
+    ],
+
+    "educationalLevel": [
+      "Year 9",
+      "Year 10",
+      "Year 11",
+      "Grade 9",
+      "Grade 10",
+      "Grade 11",
+      "Lower Secondary Mathematics",
+      "Middle School Mathematics",
+      "IGCSE Mathematics",
+      "GCSE Mathematics",
+      "Foundation Mathematics",
+      "Higher Mathematics"
+    ],
+
+    "keywords": [
+      "simultaneous equations",
+      "elimination method",
+      "solve simultaneous equations",
+      "integer coefficients",
+      "decimal coefficients",
+      "fraction coefficients",
+      "linear equations",
+      "interactive maths",
+      "practice questions",
+      "gcse maths",
+      "igcse maths",
+      "edexcel igcse",
+      "oxfordaqa igcse",
+      "common core 8.EE.7",
+      "australian curriculum",
+      "singapore maths",
+      "junior cycle maths",
+      "national 5 maths",
+      "wjec maths",
+      "secondary mathematics"
+    ],
+
+    "curriculumTaxonomy": {
+      "UK_GCSE_IGCSE": [
+        "Cambridge IGCSE Mathematics 0580",
+        "Cambridge IGCSE Mathematics (US) 0444",
+        "Edexcel GCSE Mathematics 1MA1",
+        "Edexcel International GCSE Mathematics A 4MA1",
+        "Edexcel GCSE Modular Mathematics (Unitised Pathway)",
+        "Edexcel International Lower Secondary Mathematics (ILS)",
+        "AQA GCSE Mathematics 8300",
+        "OCR GCSE Mathematics J560",
+        "WJEC GCSE Mathematics C300QS",
+        "Eduqas GCSE Mathematics C300U10-1",
+        "CCEA GCSE Mathematics M/5"
+      ],
+
+      "Scotland": [
+        "Scottish National 5 Mathematics (N5)",
+        "Scottish Higher Mathematics (H)"
+      ],
+
+      "Ireland": [
+        "Irish Junior Cycle Mathematics (JC Maths)",
+        "Irish Leaving Certificate Mathematics (LC Maths)"
+      ],
+
+      "United_States_Common_Core": [
+        "Common Core 8.EE.7",
+        "Common Core HSA-REI.B.3",
+        "Common Core HSA-CED.A",
+        "Common Core HSF-IF"
+      ],
+
+      "Australia_ACARA": [
+        "Australian Curriculum ACMNA194",
+        "Australian Curriculum ACMNA233",
+        "Australian Curriculum Years 7–10 Mathematics"
+      ],
+
+      "Singapore_MOE": [
+        "Singapore Lower Secondary Mathematics",
+        "Singapore Upper Secondary Mathematics (O-Level)"
+      ],
+
+      "International_Baccalaureate": [
+        "IB MYP Mathematics (Years 1–5)",
+        "IB DP Mathematics: Applications & Interpretation (AI)",
+        "IB DP Mathematics: Analysis & Approaches (AA)"
+      ]
+    },
+
+    "educationalAlignment": [
+      {
+        "@type": "AlignmentObject",
+        "alignmentType": "educationalStandard",
+        "targetName": "GCSE Mathematics (AQA/Edexcel/OCR/WJEC/CCEA) – Algebra: Simultaneous Equations (Elimination Method)"
+      },
+      {
+        "@type": "AlignmentObject",
+        "alignmentType": "educationalStandard",
+        "targetName": "Cambridge IGCSE Mathematics 0580 – Algebra: Simultaneous Linear Equations"
+      },
+      {
+        "@type": "AlignmentObject",
+        "alignmentType": "educationalStandard",
+        "targetName": "Edexcel International GCSE Mathematics A – Algebra: Simultaneous Equations"
+      },
+      {
+        "@type": "AlignmentObject",
+        "alignmentType": "educationalStandard",
+        "targetName": "OxfordAQA International GCSE Mathematics – Algebraic Techniques: Simultaneous Equations"
+      },
+      {
+        "@type": "AlignmentObject",
+        "alignmentType": "educationalStandard",
+        "targetName": "Common Core 8.EE.7 – Solve linear equations in one variable and systems of linear equations"
+      },
+      {
+        "@type": "AlignmentObject",
+        "alignmentType": "educationalStandard",
+        "targetName": "Australian Curriculum Year 10 – Solve simultaneous linear equations using elimination"
+      },
+      {
+        "@type": "AlignmentObject",
+        "alignmentType": "educationalStandard",
+        "targetName": "Singapore Lower Secondary Mathematics – Algebra: Simultaneous Linear Equations"
+      },
+      {
+        "@type": "AlignmentObject",
+        "alignmentType": "educationalStandard",
+        "targetName": "Scottish National 5 Mathematics – Expressions & Equations: Simultaneous Equations"
+      },
+      {
+        "@type": "AlignmentObject",
+        "alignmentType": "educationalStandard",
+        "targetName": "Welsh WJEC GCSE Mathematics – Algebra: Simultaneous Equations"
+      },
+      {
+        "@type": "AlignmentObject",
+        "alignmentType": "educationalStandard",
+        "targetName": "Irish Junior Cycle Mathematics – Simultaneous Linear Equations"
+      },
+      {
+        "@type": "AlignmentObject",
+        "alignmentType": "educationalStandard",
+        "targetName": "Global Lower Secondary Mathematics – Algebra: Simultaneous Equations"
+      }
+    ]
+  }
+  </script>
 
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -14,6 +200,7 @@
   <!-- Global Styles -->
   <link rel="stylesheet" href="../../../css/styles.css">
 </head>
+
 
 <body class="bg-gray-50 text-gray-800">
 
