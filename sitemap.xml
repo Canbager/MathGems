@@ -8,6 +8,13 @@
     <priority>1.0</priority>
   </url>
 
+  <!-- About -->
+  <url>
+    <loc>https://mathgems.ai/about/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
   <!-- Algebra → Quadratics -->
   <url>
     <loc>https://mathgems.ai/apps/algebra/quadratic/index.html</loc>
