@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IGCSE Math: Circle Theorems Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/roughjs@latest/bundled/rough.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Gochi+Hand&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .sketch-font { font-family: 'Gochi Hand', cursive; }
+        canvas { display: block; touch-action: none; background: #fff; cursor: pointer; }
+        .rough-area { filter: url(#rough-paper); }
+        
+        .sketch-input {
+            border: 3px solid #1e293b;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-family: 'Gochi Hand', cursive;
+            font-size: 1.5rem;
+            outline: none;
+            box-shadow: 4px 4px 0px 0px rgba(30,41,59,1);
+            transition: all 0.2s;
+        }
+        .sketch-input:focus {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px 0px rgba(30,41,59,1);
+        }
+
+        /* Select Dropdown Styling */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231e293b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.5em;
+        }
+        select:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            background-color: #f1f5f9; /* Slate-100 */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-4 md:p-8">
+    <svg style="position: absolute; width: 0; height: 0;">
+        <filter id="rough-paper">
+            <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" />
+        </filter>
+    </svg>
+
+    <div class="max-w-5xl mx-auto space-y-6">
+        <!-- HEADER -->
+        <div class="bg-white border-4 border-slate-800 p-6 rounded-xl shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <h1 class="text-2xl md:text-3xl font-bold sketch-font text-slate-800 whitespace-nowrap">Topic:</h1>
+                    <select id="theoremSelector" class="w-full md:w-72 bg-indigo-50 border-3 border-slate-800 rounded px-4 py-2 sketch-font text-xl font-bold text-indigo-900 cursor-pointer hover:bg-indigo-100 transition-colors">
+                        <option value="center">Angle at Center</option>
+                        <option value="semicircle">Angle in Semicircle</option>
+                        <option value="segment">Same Segment</option>
+                        <option value="cyclic">Cyclic Quadrilateral</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-100 px-3 py-2 rounded-lg border-2 border-slate-200">
+                    <input type="checkbox" id="randomMode" class="w-5 h-5 accent-indigo-600 border-2 border-slate-800 rounded cursor-pointer">
+                    <label for="randomMode" class="sketch-font text-lg font-bold text-slate-700 cursor-pointer select-none">Random</label>
+                </div>
+            </div>
+            <button id="resetBtn" class="bg-white border-2 border-slate-800 px-6 py-2 rounded sketch-font font-bold text-xl hover:bg-slate-100 transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-1 active:translate-y-1">
+                New Question
+            </button>
+        </div>
+
+        <!-- QUESTION AREA -->
+        <div class="bg-white border-4 border-slate-800 rounded-xl overflow-hidden flex flex-col md:flex-row shadow-[8px_8px_0px_0px_rgba(30,41,59,1)]">
+            <div class="flex-1 p-8 rough-area relative">
+                <div class="absolute top-4 right-4 opacity-10 pointer-events-none sketch-font text-6xl rotate-12">?</div>
+                <h2 class="text-2xl font-bold sketch-font text-indigo-700 underline decoration-indigo-200 decoration-4 mb-4">IGCSE Challenge</h2>
+                
+                <div id="problem-text" class="text-slate-800 leading-relaxed text-xl sketch-font space-y-4"></div>
+
+                <div class="mt-8 flex flex-col sm:flex-row items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="sketch-font text-2xl font-bold">Answer:</span>
+                        <input type="number" id="userAnswer" class="sketch-input w-32" placeholder="deg" step="1">
+                        <span class="sketch-font text-2xl">°</span>
+                    </div>
+                    <button id="submitBtn" class="w-full sm:w-auto bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold border-2 border-slate-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all sketch-font text-2xl hover:bg-indigo-700">
+                        Check
+                    </button>
+                </div>
+            </div>
+
+            <div class="w-full md:w-64 bg-emerald-50 border-t-4 md:border-t-0 md:border-l-4 border-slate-800 p-6 flex flex-col items-center text-center justify-center">
+                <div class="w-20 h-20 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-4xl mb-3 shadow-[4px_4px_0px_0px_rgba(20,83,45,0.4)] border-2 border-emerald-800">4</div>
+                <h3 class="font-bold text-emerald-900 text-lg uppercase sketch-font">Quality Education</h3>
+                <p class="text-[10px] text-emerald-700 mt-1 uppercase font-bold tracking-widest">Global Goal</p>
+                <div class="mt-4 text-xs text-emerald-800 italic border-t-2 border-emerald-200 pt-2 leading-tight sketch-font">
+                    Ensure inclusive and equitable quality education and promote lifelong learning opportunities for all.
+                </div>
+            </div>
+        </div>
+
+        <!-- VISUALISATION CANVAS -->
+        <div class="grid md:grid-cols-5 gap-6">
+            <div class="md:col-span-3 bg-white border-4 border-slate-800 rounded-xl overflow-hidden relative aspect-square shadow-[8px_8px_0px_0px_rgba(30,41,59,1)]">
+                <canvas id="geoCanvas" class="w-full h-full"></canvas>
+                <div class="absolute bottom-4 left-4 right-4 text-center pointer-events-none">
+                    <span id="interactionTip" class="bg-yellow-100 border-2 border-slate-800 px-3 py-1 rounded-full text-sm font-bold sketch-font shadow-sm text-slate-800">
+                        👆 Tip: Drag blue points to visualize!
+                    </span>
+                </div>
+            </div>
+
+            <div class="md:col-span-2 space-y-6 flex flex-col">
+                <div id="feedback" class="hidden p-6 rounded-xl border-4 border-slate-800 sketch-font text-2xl font-bold text-center shadow-[4px_4px_0px_0px_rgba(30,41,59,0.5)] transition-all"></div>
+
+                <div class="bg-amber-50 border-4 border-slate-800 rounded-xl p-6 shadow-[4px_4px_0px_0px_rgba(30,41,59,1)] flex-1">
+                    <h4 class="text-xl font-bold sketch-font text-amber-900 mb-4 border-b-2 border-amber-200 pb-2">Properties</h4>
+                    <div id="legendItems" class="space-y-3 sketch-font text-lg text-slate-700 mb-6">
+                        <!-- Injected by JS -->
+                    </div>
+                    <div class="p-4 bg-white border-2 border-slate-400 rounded-lg">
+                        <p class="text-sm font-sans text-slate-500 mb-1 font-bold">THEOREM HINT:</p>
+                        <p id="hintText" class="sketch-font text-lg leading-tight"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const canvas = document.getElementById('geoCanvas');
+        const ctx = canvas.getContext('2d');
+        const roughCanvas = rough.canvas(canvas);
+        
+        // --- STATE MANAGEMENT ---
+        let width, height, centerX, centerY, radius;
+        let activeMode = 'center';
+        let draggedPointKey = null;
+
+        // Unified State Object
+        let state = {
+            points: {}, // Stores angular positions (radians) for points on circle
+            correctAnswer: 0,
+            generatedValue: 0
+        };
+
+        // --- THEOREM LOGIC DEFINITIONS ---
+        const theorems = {
+            center: {
+                title: "Angle at Center",
+                hint: "The angle at the center is <span class='text-indigo-600 font-bold'>twice</span> the angle at the circumference.",
+                points: ['A', 'B', 'C'],
+                movable: ['C'],
+                generate: () => {
+                    const angle = Math.floor(Math.random() * 40 + 40) * 2; // 80-160 even
+                    state.generatedValue = angle;
+                    state.correctAnswer = angle / 2;
+                    
+                    // Setup Geometry
+                    const half = (angle * Math.PI / 180) / 2;
+                    state.points = {
+                        A: (Math.PI / 2) - half,
+                        B: (Math.PI / 2) + half,
+                        C: -Math.PI / 2
+                    };
+
+                    return `Points \\(A\\), \\(B\\), and \\(C\\) lie on a circle with center \\(O\\). 
+                            \\(\\angle AOB = ${angle}^\\circ\\). <br>Find the value of \\(x\\), \\(\\angle ACB\\).`;
+                },
+                draw: () => {
+                    const { A, B, C } = getPoints();
+                    const O = { x: centerX, y: centerY };
+                    
+                    // Lines
+                    drawRoughLine(O, A); drawRoughLine(O, B);
+                    drawRoughLine(C, A, '#4338ca'); drawRoughLine(C, B, '#4338ca');
+                    
+                    // Arcs
+                    drawAngleLabel(O, state.points.A, state.points.B, 40, `${state.generatedValue}°`);
+                    
+                    // Calculate C angle for visual label
+                    if (A && B && C) {
+                        const angCA = Math.atan2(A.y - C.y, A.x - C.x);
+                        const angCB = Math.atan2(B.y - C.y, B.x - C.x);
+                        drawAngleLabel(C, angCA, angCB, 50, "x");
+                    }
+                    
+                    // Points
+                    drawPoint(O, 'O', '#1e293b');
+                    drawPoint(A, 'A', '#ef4444');
+                    drawPoint(B, 'B', '#ef4444');
+                    drawPoint(C, 'C', '#3b82f6', true);
+                }
+            },
+            semicircle: {
+                title: "Angle in Semicircle",
+                hint: "The angle in a semicircle is always <span class='text-indigo-600 font-bold'>90°</span>.",
+                points: ['A', 'B', 'C'],
+                movable: ['C'],
+                generate: () => {
+                    const angleA = Math.floor(Math.random() * 40 + 20); // 20-60
+                    state.generatedValue = angleA;
+                    state.correctAnswer = 90 - angleA;
+
+                    // Diameter A-B horizontal
+                    state.points = {
+                        A: Math.PI, // Left
+                        B: 0,       // Right
+                        C: -Math.PI / 2 // Top
+                    };
+
+                    return `\\(AB\\) is the diameter of the circle. <br>
+                            Angle \\(\\angle CAB = ${angleA}^\\circ\\). <br>
+                            Find the value of \\(x\\), \\(\\angle CBA\\).`;
+                },
+                draw: () => {
+                    const { A, B, C } = getPoints();
+                    
+                    // Diameter
+                    drawRoughLine(A, B, '#1e293b');
+                    // Triangle
+                    drawRoughLine(C, A, '#4338ca'); drawRoughLine(C, B, '#4338ca');
+                    
+                    // Right Angle Symbol at C
+                    drawRightAngle(C, A, B);
+
+                    // Given Angle A
+                    if (A && B && C) {
+                        const angAC = Math.atan2(C.y - A.y, C.x - A.x);
+                        drawAngleLabel(A, 0, angAC, 50, `${state.generatedValue}°`);
+
+                        // Unknown Angle B
+                        const angBC = Math.atan2(C.y - B.y, C.x - B.x);
+                        drawAngleLabel(B, Math.PI, angBC, 50, "x");
+                    }
+
+                    drawPoint(A, 'A', '#ef4444');
+                    drawPoint(B, 'B', '#ef4444');
+                    drawPoint(C, 'C', '#3b82f6', true);
+                }
+            },
+            segment: {
+                title: "Angles in Same Segment",
+                hint: "Angles subtended by the same arc at the circumference are <span class='text-indigo-600 font-bold'>equal</span>.",
+                points: ['A', 'B', 'C', 'D'],
+                movable: ['C', 'D'],
+                generate: () => {
+                    const angle = Math.floor(Math.random() * 50 + 30);
+                    state.generatedValue = angle;
+                    state.correctAnswer = angle;
+                    
+                    state.points = {
+                        A: Math.PI * 0.75,
+                        B: Math.PI * 0.25,
+                        C: -Math.PI * 0.75,
+                        D: -Math.PI * 0.25
+                    };
+                    
+                    return `Points \\(A, B, C, D\\) are on the circle. <br>
+                            Angle \\(\\angle ACB = ${angle}^\\circ\\). <br>
+                            Find the value of \\(x\\), \\(\\angle ADB\\).`;
+                },
+                draw: () => {
+                    const { A, B, C, D } = getPoints();
+                    
+                    // Chord (Hidden or dashed mostly, but let's draw base chord thin)
+                    drawRoughLine(A, B, '#94a3b8', [5, 5]);
+
+                    // Butterfly wings
+                    drawRoughLine(C, A, '#4338ca'); drawRoughLine(C, B, '#4338ca');
+                    drawRoughLine(D, A, '#0f766e'); drawRoughLine(D, B, '#0f766e');
+
+                    // Label C (Known)
+                    if (A && B && C && D) {
+                        const angCA = Math.atan2(A.y - C.y, A.x - C.x);
+                        const angCB = Math.atan2(B.y - C.y, B.x - C.x);
+                        drawAngleLabel(C, angCA, angCB, 40, `${state.generatedValue}°`);
+
+                        // Label D (Unknown)
+                        const angDA = Math.atan2(A.y - D.y, A.x - D.x);
+                        const angDB = Math.atan2(B.y - D.y, B.x - D.x);
+                        drawAngleLabel(D, angDA, angDB, 40, "x");
+                    }
+
+                    drawPoint(A, 'A', '#ef4444'); drawPoint(B, 'B', '#ef4444');
+                    drawPoint(C, 'C', '#3b82f6', true); drawPoint(D, 'D', '#3b82f6', true);
+                }
+            },
+            cyclic: {
+                title: "Cyclic Quadrilateral",
+                hint: "Opposite angles in a cyclic quadrilateral sum to <span class='text-indigo-600 font-bold'>180°</span>.",
+                points: ['A', 'B', 'C', 'D'],
+                movable: ['A', 'B', 'C', 'D'],
+                generate: () => {
+                    const angleA = Math.floor(Math.random() * 60 + 60); // 60-120
+                    state.generatedValue = angleA;
+                    state.correctAnswer = 180 - angleA;
+
+                    state.points = {
+                        A: -Math.PI * 0.75,
+                        B: -Math.PI * 0.25,
+                        C: Math.PI * 0.25,
+                        D: Math.PI * 0.75
+                    };
+
+                    return `\\(ABCD\\) is a cyclic quadrilateral. <br>
+                            Angle \\(\\angle DAB = ${angleA}^\\circ\\). <br>
+                            Find the value of \\(x\\), \\(\\angle BCD\\).`;
+                },
+                draw: () => {
+                    const { A, B, C, D } = getPoints();
+
+                    // Quad
+                    drawRoughLine(A, B); drawRoughLine(B, C);
+                    drawRoughLine(C, D); drawRoughLine(D, A);
+
+                    // Angle A (Known) -- Need vectors AB and AD
+                    if (A && B && C && D) {
+                        const angAB = Math.atan2(B.y - A.y, B.x - A.x);
+                        const angAD = Math.atan2(D.y - A.y, D.x - A.x);
+                        drawAngleLabel(A, angAB, angAD, 40, `${state.generatedValue}°`);
+
+                        // Angle C (Unknown)
+                        const angCB = Math.atan2(B.y - C.y, B.x - C.x);
+                        const angCD = Math.atan2(D.y - C.y, D.x - C.x);
+                        drawAngleLabel(C, angCB, angCD, 40, "x");
+                    }
+
+                    drawPoint(A, 'A', '#3b82f6', true); drawPoint(B, 'B', '#3b82f6', true);
+                    drawPoint(C, 'C', '#3b82f6', true); drawPoint(D, 'D', '#3b82f6', true);
+                }
+            }
+        };
+
+        // --- CORE FUNCTIONS ---
+
+        function resize() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.width;
+            width = canvas.width;
+            height = canvas.height;
+            centerX = width / 2;
+            centerY = height / 2;
+            radius = (width / 2) * 0.75;
+            draw();
+        }
+
+        function generateProblem() {
+            const selector = document.getElementById('theoremSelector');
+            const isRandom = document.getElementById('randomMode').checked;
+            
+            if (isRandom) {
+                const keys = Object.keys(theorems);
+                const randomKey = keys[Math.floor(Math.random() * keys.length)];
+                activeMode = randomKey;
+                // Sync selector visual so user knows what topic it is, even if ghosted
+                selector.value = randomKey;
+            } else {
+                activeMode = selector.value;
+            }
+
+            const config = theorems[activeMode];
+
+            // Reset UI
+            document.getElementById('userAnswer').value = '';
+            document.getElementById('feedback').className = 'hidden';
+            document.getElementById('hintText').innerHTML = config.hint;
+
+            // Generate Content
+            const textHTML = config.generate();
+            const textEl = document.getElementById('problem-text');
+            textEl.innerHTML = textHTML;
+            renderMathInElement(textEl);
+
+            // Update Legend
+            const legendEl = document.getElementById('legendItems');
+            let legendHTML = '';
+            if(config.points.includes('O')) {
+                legendHTML += `<div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full bg-slate-800"></span><span>Center O</span></div>`;
+            }
+            if(config.points.some(p => !config.movable.includes(p) && p !== 'O')) {
+                legendHTML += `<div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full bg-red-500 border border-slate-800"></span><span>Fixed Points</span></div>`;
+            }
+            if(config.movable.length > 0) {
+                legendHTML += `<div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full bg-blue-500 border border-slate-800"></span><span>Movable Points</span></div>`;
+            }
+            legendEl.innerHTML = legendHTML;
+
+            draw();
+        }
+
+        // --- HELPER DRAWING FUNCTIONS ---
+        function getPoints() {
+            let coords = {};
+            // Guard: if radius/center are not defined yet, return empty
+            if (!radius || !centerX) return coords;
+
+            for (let [key, rad] of Object.entries(state.points)) {
+                coords[key] = {
+                    x: centerX + radius * Math.cos(rad),
+                    y: centerY + radius * Math.sin(rad)
+                };
+            }
+            return coords;
+        }
+
+        function drawRoughLine(p1, p2, color = '#1e293b', dash = []) {
+            if (!p1 || !p2) return; // Guard clause
+            let opts = { roughness: 1.5, stroke: color, strokeWidth: 2 };
+            if(dash.length) opts.strokeLineDash = dash;
+            roughCanvas.line(p1.x, p1.y, p2.x, p2.y, opts);
+        }
+
+        function drawPoint(pt, label, color, isMovable = false) {
+            if (!pt) return; // Guard clause
+            const size = isMovable ? 10 : 6;
+            roughCanvas.circle(pt.x, pt.y, size * 2, { fill: color, fillStyle: 'solid', stroke: '#1e293b', strokeWidth: 1.5 });
+            
+            ctx.font = "bold 20px 'Gochi Hand'";
+            ctx.fillStyle = "#1e293b";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            // Simple Label offset
+            const dx = pt.x - centerX;
+            const dy = pt.y - centerY;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const labelDist = 25;
+            
+            let lx = pt.x, ly = pt.y;
+            if (dist < 10) { ly += 25; } 
+            else {
+                lx += (dx/dist) * labelDist;
+                ly += (dy/dist) * labelDist + 6;
+            }
+            ctx.fillText(label, lx, ly);
+        }
+
+        function drawAngleLabel(center, rad1, rad2, r, text) {
+            if (!center) return; 
+
+            // Calculate the angle difference to determine the minor arc
+            let diff = rad2 - rad1;
+            // Normalize diff to be between -PI and PI
+            while (diff <= -Math.PI) diff += 2 * Math.PI;
+            while (diff > Math.PI) diff -= 2 * Math.PI;
+
+            let start, end;
+
+            // Arrange start and end so we always draw the minor arc (positive sweep)
+            if (diff > 0) {
+                start = rad1;
+                end = rad1 + diff;
+            } else {
+                start = rad2;
+                end = rad2 + Math.abs(diff);
+            }
+
+            // Draw the arc using RoughJS
+            roughCanvas.arc(center.x, center.y, r * 2, r * 2, start, end, false, {
+                stroke: text === 'x' ? '#4338ca' : '#1e293b',
+                strokeWidth: 1,
+                roughness: 0.5
+            });
+
+            // Calculate label position along the bisector
+            const midAngle = start + (end - start) / 2;
+            const labelRadius = r + 25; // Push label out slightly past the arc
+            
+            const lx = center.x + labelRadius * Math.cos(midAngle);
+            const ly = center.y + labelRadius * Math.sin(midAngle);
+
+            // Render Text
+            // Use Times New Roman Italic for the variable 'x' to look like math
+            if (text === 'x') {
+                ctx.font = "italic bold 28px 'Times New Roman', serif";
+            } else if (text.includes('°')) {
+                ctx.font = "bold 16px 'Inter', sans-serif";
+            } else {
+                ctx.font = "bold 24px 'Gochi Hand', cursive";
+            }
+
+            ctx.fillStyle = text === 'x' ? "#4338ca" : "#1e293b";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            
+            // White outline for better readability over lines
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = "#ffffff";
+            ctx.strokeText(text, lx, ly);
+            ctx.fillText(text, lx, ly);
+        }
+
+        function drawRightAngle(p, arm1, arm2) {
+            if (!p) return; // Guard clause
+
+            // Approx direction to center
+            const dx = centerX - p.x;
+            const dy = centerY - p.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const s = 15; // size
+            const ux = (dx/dist)*s;
+            const uy = (dy/dist)*s;
+            
+            // This is a rough approximation of a square marker pointing to center
+            // Good enough for "Angle in semicircle" where C is roughly perpendicular to radius
+            roughCanvas.polygon([
+                [p.x + ux*0.5 + uy*0.5, p.y + uy*0.5 - ux*0.5], // Rotate vector slightly? No, keep simple
+                [p.x + ux, p.y + uy], // This assumes 90 degree logic aligned with radius
+                // Actually, let's just draw a small square rotated
+                // Simplest: just draw a small box at C towards O
+                [p.x + ux, p.y + uy] 
+            ]);
+        }
+
+        function draw() {
+            // Guard clause: Ensure dimensions are set and state is populated
+            if (!width || !height || !state.points || Object.keys(state.points).length === 0) return;
+
+            ctx.clearRect(0, 0, width, height);
+            
+            const lineOpt = { roughness: 2, stroke: '#334155', strokeWidth: 3 };
+            roughCanvas.circle(centerX, centerY, radius * 2, lineOpt);
+
+            if (theorems[activeMode]) {
+                theorems[activeMode].draw();
+            }
+        }
+
+        // --- INTERACTION ---
+        function getMousePos(evt) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+            const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        function handleStart(evt) {
+            const pos = getMousePos(evt);
+            const currentPoints = getPoints();
+            const config = theorems[activeMode];
+
+            // Check if near any movable point
+            draggedPointKey = null;
+            for (let key of config.movable) {
+                const p = currentPoints[key];
+                if (p && Math.hypot(pos.x - p.x, pos.y - p.y) < 30) {
+                    draggedPointKey = key;
+                    break;
+                }
+            }
+            
+            if (draggedPointKey) evt.preventDefault();
+        }
+
+        function handleMove(evt) {
+            if (!draggedPointKey) return;
+            evt.preventDefault();
+            const pos = getMousePos(evt);
+            
+            // Update angle of dragged point
+            let angle = Math.atan2(pos.y - centerY, pos.x - centerX);
+            state.points[draggedPointKey] = angle;
+            
+            draw();
+        }
+
+        function handleEnd() { draggedPointKey = null; }
+
+        function checkAnswer() {
+            const input = document.getElementById('userAnswer').value;
+            const feedback = document.getElementById('feedback');
+            if (!input) return;
+
+            const diff = Math.abs(parseFloat(input) - state.correctAnswer);
+            feedback.classList.remove('hidden', 'bg-red-100', 'bg-green-100', 'text-red-800', 'text-green-800', 'border-red-800', 'border-green-800');
+
+            if (diff < 0.5) {
+                feedback.innerHTML = "Correct! 🎉";
+                feedback.classList.add('bg-green-100', 'text-green-800', 'border-green-800');
+            } else {
+                feedback.innerHTML = `Not quite. Answer is ${state.correctAnswer}°`;
+                feedback.classList.add('bg-red-100', 'text-red-800', 'border-red-800');
+            }
+        }
+
+        // --- EVENTS ---
+        canvas.addEventListener('mousedown', handleStart);
+        canvas.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', handleEnd);
+        canvas.addEventListener('touchstart', handleStart, {passive: false});
+        canvas.addEventListener('touchmove', handleMove, {passive: false});
+        window.addEventListener('touchend', handleEnd);
+
+        document.getElementById('submitBtn').addEventListener('click', checkAnswer);
+        document.getElementById('resetBtn').addEventListener('click', generateProblem);
+        document.getElementById('theoremSelector').addEventListener('change', generateProblem);
+        
+        // Random Mode Event Listener
+        document.getElementById('randomMode').addEventListener('change', (e) => {
+            const selector = document.getElementById('theoremSelector');
+            if (e.target.checked) {
+                selector.disabled = true;
+                generateProblem(); // Auto-generate random Q on switch
+            } else {
+                selector.disabled = false;
+                generateProblem(); // Return to manual selection (or just re-generate current)
+            }
+        });
+
+        window.addEventListener('resize', resize);
+
+        // Init
+        resize();
+        generateProblem();
+    </script>
+</body>
+</html>
